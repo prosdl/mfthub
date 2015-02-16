@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+   xmlns:tx="http://www.springframework.org/schema/tx"
+   xmlns:context="http://www.springframework.org/schema/context"
+   xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+   xsi:schemaLocation="
+      http://www.springframework.org/schema/beans 
+      http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+      http://www.springframework.org/schema/tx 
+      http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+      http://www.springframework.org/schema/context 
+      http://www.springframework.org/schema/context/spring-context-4.0.xsd        
+      http://www.springframework.org/schema/jdbc 
+      http://www.springframework.org/schema/jdbc/spring-jdbc-4.0.xsd">
+
+   <context:component-scan base-package="de.simmft"></context:component-scan>
+
+   <bean name="dataSourceMysql"
+      class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+      <property name="driverClassName" value="com.mysql.jdbc.Driver" />
+      <property name="url" value="jdbc:mysql://localhost:3306/mft" />
+      <property name="username" value="mft" />
+      <property name="password" value="mft" />
+   </bean>
+
+   <bean id="sessionFactory"
+      class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+      <property name="dataSource">
+         <ref bean="dataSourceMysql" />
+      </property>
+      <property name="packagesToScan" value="de.simmft.core.model" />
+      <property name="hibernateProperties">
+         <props>
+            <prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+            <prop key="hibernate.hbm2ddl.auto">update</prop>
+            <!-- -<prop key="hibernate.show_sql">true</prop>
+            <prop key="hibernate.format_sql">true</prop> -->
+         </props>
+      </property>
+   </bean>
+   
+   <tx:annotation-driven/>
+   <bean id="transactionManager"
+      class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+      <property name="sessionFactory" ref="sessionFactory" />
+   </bean>
+</beans>
