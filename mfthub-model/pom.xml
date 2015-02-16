@@ -11,4 +11,36 @@
    </parent>
    <artifactId>mfthub-model</artifactId>
    <name>mfthub-model</name>
+
+
+   <url>http://maven.apache.org</url>
+   <properties>
+   </properties>
+
+   <dependencies>
+
+      <dependency>
+         <groupId>org.hibernate</groupId>
+         <artifactId>hibernate-core</artifactId>
+         <version>${org.hibernate.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.hibernate</groupId>
+         <artifactId>hibernate-entitymanager</artifactId>
+         <version>${org.hibernate.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.hibernate.javax.persistence</groupId>
+         <artifactId>hibernate-jpa-2.0-api</artifactId>
+         <version>1.0.1.Final</version>
+      </dependency>
+
+      <dependency>
+         <groupId>mysql</groupId>
+         <artifactId>mysql-connector-java</artifactId>
+         <version>5.1.30</version>
+      </dependency>
+
+   </dependencies>
 </project>

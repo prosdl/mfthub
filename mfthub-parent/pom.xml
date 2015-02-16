@@ -12,6 +12,9 @@
    <packaging>pom</packaging>
    <name>mfthub-parent</name>
    
+   <properties>
+      <org.hibernate.version>4.3.4.Final</org.hibernate.version>
+   </properties>
    
    <build>
    <plugins>
