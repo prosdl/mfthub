@@ -11,4 +11,26 @@ public class TransferClientType {
    @GeneratedValue(strategy=GenerationType.AUTO)   
    private Long id;
    private String implementingClass;
+   
+   public TransferClientType() {
+      
+   }
+
+   public Long getId() {
+      return id;
+   }
+
+   public void setId(Long id) {
+      this.id = id;
+   }
+
+   public String getImplementingClass() {
+      return implementingClass;
+   }
+
+   public void setImplementingClass(String implementingClass) {
+      this.implementingClass = implementingClass;
+   }
+   
+   
 }
