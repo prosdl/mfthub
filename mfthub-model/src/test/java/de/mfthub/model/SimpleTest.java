@@ -7,13 +7,15 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.support.AnnotationConfigContextLoader;
 import org.springframework.test.context.transaction.TransactionConfiguration;
 
 import de.mfthub.model.entities.Tenant;
 import de.mfthub.model.repository.ITenantDAO;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = { "classpath:spring-model-embedded.xml" }) 
+//@ContextConfiguration(locations = { "classpath:spring-model-embedded.xml" }) 
+@ContextConfiguration(classes=SimpleTestConfiguration.class, loader=AnnotationConfigContextLoader.class) 
 @TransactionConfiguration(defaultRollback = true)
 @Transactional
 public class SimpleTest {
