@@ -11,4 +11,17 @@
    </parent>
    <artifactId>mfthub-rest</artifactId>
    <name>mfthub-rest</name>
+
+   <dependencies>
+      <dependency>
+         <groupId>org.springframework.boot</groupId>
+         <artifactId>spring-boot-starter-jersey</artifactId>
+      </dependency>
+      
+      <dependency>
+         <groupId>de.mfthub</groupId>
+         <artifactId>mfthub-model</artifactId>
+         <version>1.0-SNAPSHOT</version>
+      </dependency>
+   </dependencies>
 </project>
