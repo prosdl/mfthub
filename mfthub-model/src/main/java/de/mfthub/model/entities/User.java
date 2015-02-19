@@ -5,6 +5,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
+import org.springframework.security.authentication.encoding.ShaPasswordEncoder;
+
 @Entity
 public class User {
 
@@ -12,9 +14,18 @@ public class User {
    @GeneratedValue(strategy = GenerationType.AUTO)
    private Long id;
    private String name;
+   private String hashedClientPassword;
 
    public User() {
 
+   }
+
+   public User(String clientId, String clearPassword) {
+      this.name = clientId;
+      ShaPasswordEncoder passowrdEncoder = new ShaPasswordEncoder(256);
+      passowrdEncoder.setEncodeHashAsBase64(true);
+      this.hashedClientPassword = passowrdEncoder.encodePassword(clearPassword,
+            null);
    }
 
    public Long getId() {
@@ -31,6 +42,14 @@ public class User {
 
    public void setName(String name) {
       this.name = name;
+   }
+
+   public String getHashedClientPassword() {
+      return hashedClientPassword;
+   }
+
+   public void setHashedClientPassword(String hashedClientPassword) {
+      this.hashedClientPassword = hashedClientPassword;
    }
 
 }
