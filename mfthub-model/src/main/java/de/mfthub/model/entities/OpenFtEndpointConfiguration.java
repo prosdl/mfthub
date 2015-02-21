@@ -6,13 +6,13 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 //@Entity
-public class OpenFtEndpoint extends Endpoint {
+public class OpenFtEndpointConfiguration extends EndpointConfiguration {
    
    @Id
    @GeneratedValue(strategy=GenerationType.AUTO)   
    private String appendCommand;
    
-   public OpenFtEndpoint() {
+   public OpenFtEndpointConfiguration() {
       
    }
 

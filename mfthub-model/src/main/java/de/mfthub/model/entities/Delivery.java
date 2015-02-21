@@ -3,11 +3,15 @@ package de.mfthub.model.entities;
 import java.util.Date;
 
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
 import org.hibernate.annotations.GenericGenerator;
+
+import de.mfthub.model.entities.enums.DeliveryState;
 
 @Entity
 public class Delivery {
@@ -22,9 +26,13 @@ public class Delivery {
    private Date initiated;
    private Date finished;
    private String errorDetails;
+   
+   @Enumerated(EnumType.STRING)
+   private DeliveryState state;
 
    public Delivery() {
-
+      initiated = new Date();
+      state = DeliveryState.INITIATED;
    }
 
    public String getUuid() {

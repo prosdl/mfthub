@@ -1,5 +1,7 @@
 package de.mfthub.model.entities;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -8,19 +10,23 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 
-import de.mfthub.model.entities.enums.TransferPolicies;
+import org.hibernate.annotations.GenericGenerator;
+
+import de.mfthub.model.entities.enums.TransferReceivePolicies;
+import de.mfthub.model.entities.enums.TransferSendPolicies;
 
 @Entity
 public class Transfer {
    @Id
-   @GeneratedValue(strategy=GenerationType.AUTO)   
-   private Long id;
+   @GeneratedValue(generator = "uuid")
+   @GenericGenerator(name = "uuid", strategy = "uuid2")
+   private String uuid;
    
    @ManyToOne(optional=false)
    private Endpoint source;
@@ -28,9 +34,14 @@ public class Transfer {
    @ManyToMany
    private List<Endpoint> targets;
    
-   @ElementCollection(targetClass=TransferPolicies.class)
+   @ElementCollection(targetClass=TransferSendPolicies.class)
    @Enumerated(EnumType.STRING)
-   private Set<TransferPolicies> transferPolicies;
+   private Set<TransferSendPolicies> transferSendPolicies = new HashSet<>();
+
+   @ElementCollection(targetClass=TransferReceivePolicies.class)
+   @Enumerated(EnumType.STRING)
+   private Set<TransferReceivePolicies> transferReceivePolicies = new HashSet<>();
+
    
    @ManyToOne(optional=false)
    private AdministrativeApplication administrativeApplication;
@@ -39,18 +50,14 @@ public class Transfer {
    private Tenant tenant;
    
    @OneToMany
-   private List<Transformation> transformations;
+   private List<Transformation> transformations = new ArrayList<>();
+   
+   @OneToOne
+   private FileSelector fileSelector;
+
    
    public Transfer() {
       
-   }
-
-   public Long getId() {
-      return id;
-   }
-
-   public void setId(Long id) {
-      this.id = id;
    }
 
    public Endpoint getSource() {
@@ -67,14 +74,6 @@ public class Transfer {
 
    public void setTargets(List<Endpoint> targets) {
       this.targets = targets;
-   }
-
-   public Set<TransferPolicies> getTransferPolicies() {
-      return transferPolicies;
-   }
-
-   public void setTransferPolicies(Set<TransferPolicies> transferPolicies) {
-      this.transferPolicies = transferPolicies;
    }
 
    public AdministrativeApplication getAdministrativeApplication() {
@@ -101,6 +100,38 @@ public class Transfer {
    public void setTransformations(List<Transformation> transformations) {
       this.transformations = transformations;
    }
-   
-   
+
+   public Set<TransferSendPolicies> getTransferSendPolicies() {
+      return transferSendPolicies;
+   }
+
+   public void setTransferSendPolicies(
+         Set<TransferSendPolicies> transferSendPolicies) {
+      this.transferSendPolicies = transferSendPolicies;
+   }
+
+   public Set<TransferReceivePolicies> getTransferReceivePolicies() {
+      return transferReceivePolicies;
+   }
+
+   public void setTransferReceivePolicies(
+         Set<TransferReceivePolicies> transferReceivePolicies) {
+      this.transferReceivePolicies = transferReceivePolicies;
+   }
+
+   public FileSelector getFileSelector() {
+      return fileSelector;
+   }
+
+   public void setFileSelector(FileSelector fileSelector) {
+      this.fileSelector = fileSelector;
+   }
+
+   public String getUuid() {
+      return uuid;
+   }
+
+   public void setUuid(String uuid) {
+      this.uuid = uuid;
+   }
 }

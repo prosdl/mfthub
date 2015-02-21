@@ -15,6 +15,7 @@
    <properties>
       <spring.boot.version>1.2.1.RELEASE</spring.boot.version>
       <spring.oauth.version>2.0.6.RELEASE</spring.oauth.version>
+      <com.google.guava>18.0</com.google.guava>
    </properties>
 
 
@@ -78,6 +79,13 @@
          <groupId>org.springframework</groupId>
          <artifactId>spring-webmvc</artifactId>
       </dependency>
+
+      <dependency>
+         <groupId>com.google.guava</groupId>
+         <artifactId>guava</artifactId>
+         <version>${com.google.guava}</version>
+      </dependency>
+
       <dependency>
          <groupId>junit</groupId>
          <artifactId>junit</artifactId>

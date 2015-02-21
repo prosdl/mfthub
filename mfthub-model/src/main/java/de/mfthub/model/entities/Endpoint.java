@@ -1,9 +1,14 @@
 package de.mfthub.model.entities;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 
 @Entity
 public class Endpoint {
@@ -11,9 +16,19 @@ public class Endpoint {
    @GeneratedValue(strategy = GenerationType.AUTO)
    private Long id;
 
-   private String hostName;
-   private Integer port;
-   private String userid;
+   @NotNull
+   @Pattern(regexp="[a-zA-Z0-9_\\-\\.]+")
+   @Column(unique=true)
+   private String endpointKey;
+   
+   private String description;
+
+
+   @ManyToOne(optional=false)
+   private TransferClientType transferClientType;
+
+   @OneToOne(optional=false)
+   private EndpointConfiguration endpointConfiguration;
 
    public Endpoint() {
 
@@ -27,28 +42,37 @@ public class Endpoint {
       this.id = id;
    }
 
-   public String getHostName() {
-      return hostName;
+   public EndpointConfiguration getEndpointConfiguration() {
+      return endpointConfiguration;
    }
 
-   public void setHostName(String hostName) {
-      this.hostName = hostName;
+   public void setEndpointConfiguration(
+         EndpointConfiguration endpointConfiguration) {
+      this.endpointConfiguration = endpointConfiguration;
    }
 
-   public Integer getPort() {
-      return port;
+   public TransferClientType getTransferClientType() {
+      return transferClientType;
    }
 
-   public void setPort(Integer port) {
-      this.port = port;
+   public void setTransferClientType(TransferClientType transferClientType) {
+      this.transferClientType = transferClientType;
    }
 
-   public String getUserid() {
-      return userid;
+   public String getEndpointKey() {
+      return endpointKey;
    }
 
-   public void setUserid(String userid) {
-      this.userid = userid;
+   public void setEndpointKey(String endpointKey) {
+      this.endpointKey = endpointKey;
+   }
+
+   public String getDescription() {
+      return description;
+   }
+
+   public void setDescription(String description) {
+      this.description = description;
    }
 
 }
