@@ -11,10 +11,11 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.AntPathMatcher;
 
 import de.mfthub.model.entities.Delivery;
 import de.mfthub.model.entities.Endpoint;
-import de.mfthub.model.entities.LocalCpEndpointConfiguration;
+import de.mfthub.model.entities.EndpointConfLocalCp;
 import de.mfthub.model.entities.enums.TransferReceivePolicies;
 import de.mfthub.model.entities.enums.TransferSendPolicies;
 import de.mfthub.transfer.api.MftPath;
@@ -22,17 +23,28 @@ import de.mfthub.transfer.api.MftPathException;
 import de.mfthub.transfer.api.TransferClientSupport;
 import de.mfthub.transfer.exception.TransmissionException;
 
-public class LocalFilecopyTransferClient extends TransferClientSupport<LocalCpEndpointConfiguration> {
+public class LocalFilecopyTransferClient extends TransferClientSupport<EndpointConfLocalCp> {
 
    private static Logger LOG = LoggerFactory.getLogger(LocalFilecopyTransferClient.class);
    
    public static class PrintFiles
       extends SimpleFileVisitor<Path> {
+      
+      private AntPathMatcher antPathMatcher;
+      
+      public PrintFiles() {
+         antPathMatcher = new AntPathMatcher();
+         antPathMatcher.setCachePatterns(true);
+      }
+
       @Override
       public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
             throws IOException {
          // TODO
          System.out.println(file.toString());
+         if (antPathMatcher.match("/tmp/**/inbox/**/*.mft", file.toString())) {
+            System.out.println("***** MATCH");
+         }
          return FileVisitResult.CONTINUE;
       }
       
@@ -64,7 +76,7 @@ public class LocalFilecopyTransferClient extends TransferClientSupport<LocalCpEn
    @Override
    public void receive(Endpoint source, Delivery delivery, Set<TransferReceivePolicies> policies)
          throws TransmissionException {
-      LocalCpEndpointConfiguration conf =  (LocalCpEndpointConfiguration) source.getEndpointConfiguration();
+      EndpointConfLocalCp conf =  (EndpointConfLocalCp) source.getEndpointConfiguration();
       String from = conf.getDirectory();
       Path sourceDirectory = Paths.get(from);
       MftPath mftPath;

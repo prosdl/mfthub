@@ -15,7 +15,8 @@ public interface TransferClient<E extends EndpointConfiguration> {
    public enum TransferClientFeature {
       TF_SUPPORTS_SEND_FILES, 
       TF_SUPPORTS_RECEIVE_FILES, 
-      TF_SUPPORTS_REMOVE_FILES
+      TF_SUPPORTS_REMOVE_FILES, 
+      TF_SUPPORTS_ATOMIC_MOVE
    }
    // @formatter:on
 

@@ -25,7 +25,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableJpaRepositories("de.mfthub")
 public class SimpleTestConfigurationJPA {
 
-   @Value("${hibernate.dialect}")
+   @Value("${hibernate.dialect}") 
    private String hibernateDialect;
 
    @Value("${hibernate.hbm2ddl.auto}")

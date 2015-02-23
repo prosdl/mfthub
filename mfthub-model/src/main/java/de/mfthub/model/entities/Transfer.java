@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -15,6 +16,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.GenericGenerator;
 
@@ -27,6 +29,14 @@ public class Transfer {
    @GeneratedValue(generator = "uuid")
    @GenericGenerator(name = "uuid", strategy = "uuid2")
    private String uuid;
+   
+   
+   @NotNull
+   @Column(unique=true)   
+   private String name;
+   
+   @NotNull
+   private Trigger trigger;
    
    @ManyToOne(optional=false)
    private Endpoint source;
@@ -54,7 +64,7 @@ public class Transfer {
    
    @OneToOne
    private FileSelector fileSelector;
-
+   
    
    public Transfer() {
       
@@ -134,4 +144,22 @@ public class Transfer {
    public void setUuid(String uuid) {
       this.uuid = uuid;
    }
+
+   public String getName() {
+      return name;
+   }
+
+   public void setName(String name) {
+      this.name = name;
+   }
+
+   public Trigger getTrigger() {
+      return trigger;
+   }
+
+   public void setTrigger(Trigger trigger) {
+      this.trigger = trigger;
+   }
+
+
 }

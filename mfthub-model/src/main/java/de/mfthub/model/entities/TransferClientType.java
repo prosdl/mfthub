@@ -6,6 +6,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 @Entity
+@Deprecated
 public class TransferClientType {
    @Id
    @GeneratedValue(strategy=GenerationType.AUTO)   
