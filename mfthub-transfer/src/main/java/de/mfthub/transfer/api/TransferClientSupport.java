@@ -5,6 +5,7 @@ import java.util.Set;
 import com.google.common.collect.ImmutableSet;
 
 import de.mfthub.model.entities.EndpointConfiguration;
+import de.mfthub.model.entities.enums.TransferClientFeature;
 
 public abstract class TransferClientSupport<E extends EndpointConfiguration>
       implements TransferClient<E> {
@@ -14,6 +15,11 @@ public abstract class TransferClientSupport<E extends EndpointConfiguration>
    
    protected void initalizeFeatures(TransferClientFeature... feature) {
        features = ImmutableSet.<TransferClientFeature>builder().add(feature).build();
+   }
+   
+   @Override
+   public Set<TransferClientFeature> getFeatures() {
+      return features;
    }
    
    public boolean supportsFeature(TransferClientFeature transferClientFeature) {

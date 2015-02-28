@@ -16,6 +16,7 @@ import org.springframework.util.AntPathMatcher;
 import de.mfthub.model.entities.Delivery;
 import de.mfthub.model.entities.Endpoint;
 import de.mfthub.model.entities.EndpointConfLocalCp;
+import de.mfthub.model.entities.enums.TransferClientFeature;
 import de.mfthub.model.entities.enums.TransferReceivePolicies;
 import de.mfthub.model.entities.enums.TransferSendPolicies;
 import de.mfthub.transfer.api.TransferClientSupport;
