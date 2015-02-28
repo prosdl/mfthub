@@ -1,4 +1,4 @@
-package de.mfthub.model;
+package de.mfthub.model.repository;
 
 import java.util.Properties;
 
@@ -7,7 +7,6 @@ import javax.sql.DataSource;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
@@ -20,12 +19,11 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @Configuration
 @EnableTransactionManagement
-@ComponentScan("de.mfthub")
-@PropertySource("classpath:hibernate.properties")
-@EnableJpaRepositories("de.mfthub")
-public class ConfigurationSpringJPA {
+@PropertySource("classpath:hibernate-test.properties")
+@EnableJpaRepositories("de.mfthub.model.repository")
+public class SimpleTestConfigurationJPA {
 
-   @Value("${hibernate.dialect}")
+   @Value("${hibernate.dialect}") 
    private String hibernateDialect;
 
    @Value("${hibernate.hbm2ddl.auto}")

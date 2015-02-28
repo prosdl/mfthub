@@ -18,32 +18,39 @@ import de.mfthub.model.entities.Endpoint;
 import de.mfthub.model.entities.EndpointConfLocalCp;
 import de.mfthub.model.entities.enums.TransferReceivePolicies;
 import de.mfthub.model.entities.enums.TransferSendPolicies;
-import de.mfthub.transfer.api.MftPath;
-import de.mfthub.transfer.api.MftPathException;
 import de.mfthub.transfer.api.TransferClientSupport;
 import de.mfthub.transfer.exception.TransmissionException;
+import de.mfthub.transfer.storage.MftFolder;
+import de.mfthub.transfer.storage.MftPathException;
 
 public class LocalFilecopyTransferClient extends TransferClientSupport<EndpointConfLocalCp> {
 
    private static Logger LOG = LoggerFactory.getLogger(LocalFilecopyTransferClient.class);
    
-   public static class PrintFiles
+   public static class MoveFilesVisitor
       extends SimpleFileVisitor<Path> {
       
       private AntPathMatcher antPathMatcher;
+      private String pattern;
+      private Path sourcePath;
+      private Path targetPath;
       
-      public PrintFiles() {
+      public MoveFilesVisitor(String pattern, Path sourcePath, Path targetPath) {
          antPathMatcher = new AntPathMatcher();
          antPathMatcher.setCachePatterns(true);
+         this.pattern = pattern;
+         this.sourcePath = sourcePath;
+         this.targetPath = targetPath;
       }
 
       @Override
       public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
             throws IOException {
-         // TODO
-         System.out.println(file.toString());
-         if (antPathMatcher.match("/tmp/**/inbox/**/*.mft", file.toString())) {
-            System.out.println("***** MATCH");
+         Path fileRelToSource = sourcePath.relativize(file);
+         LOG.info("Found: '{}'.", fileRelToSource.toString());
+         if (antPathMatcher.match(pattern, fileRelToSource.toString())) {
+            Path targetFile = targetPath.resolve(fileRelToSource);
+            LOG.info("Moving '{}' to '{}'.", file.toString(), targetFile.toString());
          }
          return FileVisitResult.CONTINUE;
       }
@@ -69,29 +76,30 @@ public class LocalFilecopyTransferClient extends TransferClientSupport<EndpointC
          throws TransmissionException {
    }
 
-   public Path mftPathToNIOPath(String basePath, MftPath mftPath) {
-      return Paths.get(basePath, mftPath.toSegmentArray());
-   }
-
    @Override
    public void receive(Endpoint source, Delivery delivery, Set<TransferReceivePolicies> policies)
          throws TransmissionException {
       EndpointConfLocalCp conf =  (EndpointConfLocalCp) source.getEndpointConfiguration();
       String from = conf.getDirectory();
       Path sourceDirectory = Paths.get(from);
-      MftPath mftPath;
-      try {
-         mftPath = MftPath.outboundFrom(delivery);
-      } catch (MftPathException e) {
-         throw new TransmissionException("Problem building outbound path from delivery.", e);
-      }
-      Path outboundNIOPath = mftPathToNIOPath(configuration.getDirectory(), mftPath);
       
+      MftFolder outbound;
       try {
-         Files.walkFileTree(sourceDirectory, new PrintFiles());
+         outbound = MftFolder.createOutboundFromDelivery(delivery);
       } catch (IOException e) {
          throw new TransmissionException(
-               String.format("Error while scanning directory %s", outboundNIOPath),e);
+               String.format("Error while creating outbound box for delivery %s", delivery),e);
+      } catch (MftPathException e) {
+         throw new TransmissionException(
+               String.format("Error while constructing mft path for delivery %s", delivery),e);
+      }
+
+      // TODO fileselector
+      try {
+         Files.walkFileTree(sourceDirectory, new MoveFilesVisitor(delivery.getTransfer().getFileSelector().getFilenameExpression(),sourceDirectory, outbound.getPath()));
+      } catch (IOException e) {
+         throw new TransmissionException(
+               String.format("Error while scanning directory %s", sourceDirectory),e);
       }
    }
 

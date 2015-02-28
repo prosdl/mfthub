@@ -1,4 +1,4 @@
-package de.mfthub.transfer.api;
+package de.mfthub.transfer.storage;
 
 @SuppressWarnings("serial")
 public class MftPathException extends Exception {

@@ -1,10 +1,14 @@
 package de.mfthub.model.entities;
 
+import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -20,6 +24,10 @@ import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.GenericGenerator;
 
+import com.google.common.collect.Sets;
+
+import de.mfthub.model.entities.enums.FileSelectorStrategy;
+import de.mfthub.model.entities.enums.Protocol;
 import de.mfthub.model.entities.enums.TransferReceivePolicies;
 import de.mfthub.model.entities.enums.TransferSendPolicies;
 
@@ -30,7 +38,7 @@ public class Transfer {
    @GenericGenerator(name = "uuid", strategy = "uuid2")
    private String uuid;
    
-   
+  
    @NotNull
    @Column(unique=true)   
    private String name;
@@ -38,10 +46,10 @@ public class Transfer {
    @NotNull
    private Trigger trigger;
    
-   @ManyToOne(optional=false)
+   @ManyToOne(optional=false, cascade={CascadeType.PERSIST, CascadeType.MERGE})
    private Endpoint source;
    
-   @ManyToMany
+   @ManyToMany(cascade={CascadeType.PERSIST, CascadeType.MERGE})
    private List<Endpoint> targets;
    
    @ElementCollection(targetClass=TransferSendPolicies.class)
@@ -53,22 +61,123 @@ public class Transfer {
    private Set<TransferReceivePolicies> transferReceivePolicies = new HashSet<>();
 
    
-   @ManyToOne(optional=false)
+   @ManyToOne(optional=false,  cascade={CascadeType.PERSIST, CascadeType.MERGE})
    private AdministrativeApplication administrativeApplication;
    
-   @ManyToOne(optional=false)
+   @ManyToOne(optional=false, cascade={CascadeType.PERSIST, CascadeType.MERGE})
    private Tenant tenant;
    
-   @OneToMany
+   @OneToMany(cascade={CascadeType.PERSIST, CascadeType.MERGE})
    private List<Transformation> transformations = new ArrayList<>();
    
-   @OneToOne
+   @OneToOne(cascade={CascadeType.PERSIST, CascadeType.MERGE})
    private FileSelector fileSelector;
    
    
-   public Transfer() {
+   public static class Builder {
+      private String uuid;
+      private String name;
+      private Trigger trigger;
+      private Endpoint source;
+      private List<Endpoint> targets;
+      private Set<TransferSendPolicies> transferSendPolicies = new HashSet<>();
+      private Set<TransferReceivePolicies> transferReceivePolicies = new HashSet<>();
+      private AdministrativeApplication administrativeApplication;
+      private Tenant tenant;
+      private List<Transformation> transformations = new ArrayList<>();
+      private FileSelector fileSelector;
+
+      public Builder(String name) {
+         this.name = name;
+         this.tenant = Tenant.INTERNAL_TENANT;
+         this.administrativeApplication = AdministrativeApplication.INTERNAL_ADMIN_APP;
+      }
       
+      public Builder forTenant(Tenant tenant) {
+         this.tenant = tenant;
+         return this;
+      }
+      
+      public Builder forApplication(AdministrativeApplication app) {
+         this.administrativeApplication = app;
+         return this;
+      }
+      
+      public Builder withRandamUUID() {
+         this.uuid = UUID.randomUUID().toString();
+         return this;
+      }
+      
+      public Builder fromSource(Endpoint endpoint) {
+         this.source = endpoint;
+         return this;
+      }
+      
+      public Builder fromSource(String uri) throws URISyntaxException {
+         this.source = Protocol.buildEndpointFromURI(uri);
+         return this;
+      }
+      public Builder fromNamedSource(String name, String uri) throws URISyntaxException {
+         this.source = Protocol.buildEndpointFromURI(name,uri);
+         return this;
+      }
+      
+      public Builder toTargets(Endpoint... endpoint) {
+         this.targets = Arrays.asList(endpoint);
+         return this;
+      }
+      
+      public Builder toTargets(String... uris) throws URISyntaxException {
+         targets = new ArrayList<>();
+         for (String uri: uris) {
+            targets.add(Protocol.buildEndpointFromURI(uri));
+         }
+         return this;
+      }
+      
+      public Builder withCronSchedule(String cron) {
+         this.trigger = new Trigger();
+         this.trigger.setCronExpresion(cron);
+         return this;
+      }
+      
+      public Builder files(String filename) {
+         this.fileSelector = new FileSelector();
+         this.fileSelector.setFilenameExpression(filename);
+         this.fileSelector.setFileSelectorStrategy(FileSelectorStrategy.ANT_STYLE);
+         return this;
+      }
+      
+      public Builder usingSendPolicies(TransferSendPolicies... transferSendPolicies) {
+         this.transferSendPolicies = Sets.newHashSet(transferSendPolicies);
+         return this;
+      }
+      
+      public Builder usingReceivePolicies(TransferReceivePolicies... transferReceivePolicies) {
+         this.transferReceivePolicies = Sets.newHashSet(transferReceivePolicies);
+         return this;
+      }
+      
+      public Transfer build() {
+         return new Transfer(this);
+      }
    }
+   public Transfer() {
+   }
+   public Transfer(Builder builder) {
+      this.administrativeApplication = builder.administrativeApplication;
+      this.fileSelector = builder.fileSelector;
+      this.name = builder.name;
+      this.source = builder.source;
+      this.targets = builder.targets;
+      this.tenant = builder.tenant;
+      this.transferReceivePolicies = builder.transferReceivePolicies;
+      this.transferSendPolicies = builder.transferSendPolicies;
+      this.transformations = builder.transformations;
+      this.trigger = builder.trigger;
+      this.uuid = builder.uuid;
+   }
+   
 
    public Endpoint getSource() {
       return source;

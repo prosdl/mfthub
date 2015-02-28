@@ -6,12 +6,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.ImportResource;
 
-import de.mfthub.model.ConfigurationSpringJPA;
+import de.mfthub.model.conf.ModelJPAConfiguration;
 
 @SpringBootApplication
 @EnableAutoConfiguration(exclude = {
       org.springframework.boot.autoconfigure.security.SecurityAutoConfiguration.class})
-@Import(ConfigurationSpringJPA.class)
+@Import(ModelJPAConfiguration.class)
 @ImportResource("classpath:/spring-oauth2.xml")
 public class Main {
    public static void main(String[] args) {

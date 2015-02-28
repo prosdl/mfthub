@@ -1,0 +1,9 @@
+                                     
+                     _|_|    _|      
+ _|_|_|  _|_|      _|      _|_|_|_|  
+ _|    _|    _|  _|_|_|_|    _|      
+ _|    _|    _|    _|        _|      
+ _|    _|    _|    _|          _|_|  
+ 
+Version    : ${application.formatted-version}
+Spring Boot: ${spring-boot.formatted-version}                                 

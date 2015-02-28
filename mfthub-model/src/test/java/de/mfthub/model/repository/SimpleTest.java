@@ -1,13 +1,13 @@
-package de.mfthub.model;
+package de.mfthub.model.repository;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import javax.transaction.Transactional;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.transaction.TransactionConfiguration;
@@ -15,10 +15,7 @@ import org.springframework.test.context.transaction.TransactionConfiguration;
 import de.mfthub.model.entities.EndpointConfScp;
 import de.mfthub.model.entities.EndpointConfiguration;
 import de.mfthub.model.entities.Tenant;
-import de.mfthub.model.repository.EndpointConfigurationRepository;
-import de.mfthub.model.repository.TenantRepository;
 
-@EnableAutoConfiguration
 @SpringApplicationConfiguration(classes=SimpleTestConfigurationJPA.class)
 @TransactionConfiguration(defaultRollback = true)
 @Transactional

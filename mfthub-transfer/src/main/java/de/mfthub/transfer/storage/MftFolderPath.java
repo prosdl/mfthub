@@ -1,13 +1,13 @@
-package de.mfthub.transfer.api;
+package de.mfthub.transfer.storage;
 
 import java.util.UUID;
 
 import de.mfthub.model.entities.Delivery;
-import de.mfthub.model.entities.Endpoint;
 
 /**
- * Describes a path for transfer in- and outboxes. A path is a String representation of
- * endpoints, their in- and outboxes, transfer identifiers and delivery identifiers.
+ * Describes a path for transfer in- and outboxes. A path is a String
+ * representation of endpoints, their in- and outboxes, transfer identifiers and
+ * delivery identifiers.
  * 
  * <p/>
  * BNF style path syntax:
@@ -40,49 +40,49 @@ import de.mfthub.model.entities.Endpoint;
  * @author prosdl
  * 
  */
-public class MftPath {
+public class MftFolderPath {
    private String sourceIdSegment;
-   private MailBox boxSegment;
+   private FolderType boxSegment;
    private UUID transferUUIDSegment;
    private UUID deliveryUUIDSegment;
 
-   public static enum MailBox {
+   public static enum FolderType {
       INBOUND, OUTBOUND;
-      
-      public static MailBox fromString(String s) throws MftPathException {
-         return MailBox.valueOf(s.toUpperCase());
+
+      public static FolderType fromString(String s) throws MftPathException {
+         return FolderType.valueOf(s.toUpperCase());
       }
    }
 
-   public MftPath(String sourceId) throws MftPathException {
+   public MftFolderPath(String sourceId) throws MftPathException {
       validateSourceIDSyntax(sourceId);
       this.setSourceIdSegment(sourceId);
    }
 
-   public MftPath(String sourceId, MailBox box) throws MftPathException {
+   public MftFolderPath(String sourceId, FolderType box) throws MftPathException {
       this(sourceId);
       this.boxSegment = box;
    }
 
-   public MftPath(String sourceId, MailBox box, UUID transferUUID)
+   public MftFolderPath(String sourceId, FolderType box, UUID transferUUID)
          throws MftPathException {
       this(sourceId, box);
       this.transferUUIDSegment = transferUUID;
    }
 
-   public MftPath(String sourceId, MailBox box, String transferUUID)
+   public MftFolderPath(String sourceId, FolderType box, String transferUUID)
          throws MftPathException {
       this(sourceId, box);
       setTransferUUIDSegment(transferUUID);
    }
 
-   public MftPath(String sourceId, MailBox box, UUID transferUUID, UUID deliveryUUID)
-         throws MftPathException {
+   public MftFolderPath(String sourceId, FolderType box, UUID transferUUID,
+         UUID deliveryUUID) throws MftPathException {
       this(sourceId, box, transferUUID);
       this.deliveryUUIDSegment = deliveryUUID;
    }
 
-   public MftPath(String sourceId, MailBox box, String transferUUID,
+   public MftFolderPath(String sourceId, FolderType box, String transferUUID,
          String deliveryUUID) throws MftPathException {
       this(sourceId, box, transferUUID);
       setDeliveryUUIDSegment(deliveryUUID);
@@ -95,37 +95,44 @@ public class MftPath {
                "Illegal syntax for source-id: can't be empty");
       }
       if (!sourceIdSegment.matches("[a-zA-Z0-9_\\-\\.]+")) {
-         throw new MftPathException(
-               String.format("Illegal syntax for source-id: '%s", 
-               sourceIdSegment));
+         throw new MftPathException(String.format(
+               "Illegal syntax for source-id: '%s", sourceIdSegment));
       }
    }
-   
+
    @Override
    public String toString() {
       StringBuilder sb = new StringBuilder(sourceIdSegment);
-      if (boxSegment == null) return sb.toString();
+      if (boxSegment == null)
+         return sb.toString();
       sb.append("/").append(boxSegment.toString());
-      if (transferUUIDSegment == null) return sb.toString();
+      if (transferUUIDSegment == null)
+         return sb.toString();
       sb.append("/").append(transferUUIDSegment.toString());
-      if (deliveryUUIDSegment == null) return sb.toString();
+      if (deliveryUUIDSegment == null)
+         return sb.toString();
       sb.append("/").append(deliveryUUIDSegment.toString());
       return sb.toString();
    }
-   
+
    public String[] toSegmentArray() {
-      if (boxSegment == null) return new String[]{sourceIdSegment};
-      if (transferUUIDSegment == null) return new String[]{sourceIdSegment, boxSegment.toString()};
-      if (deliveryUUIDSegment == null) return new String[]{sourceIdSegment, boxSegment.toString(),transferUUIDSegment.toString()};
-      return new String[]{sourceIdSegment,boxSegment.toString(),transferUUIDSegment.toString(),deliveryUUIDSegment.toString()};
+      if (boxSegment == null)
+         return new String[] { sourceIdSegment };
+      if (transferUUIDSegment == null)
+         return new String[] { sourceIdSegment, boxSegment.toString() };
+      if (deliveryUUIDSegment == null)
+         return new String[] { sourceIdSegment, boxSegment.toString(),
+               transferUUIDSegment.toString() };
+      return new String[] { sourceIdSegment, boxSegment.toString(),
+            transferUUIDSegment.toString(), deliveryUUIDSegment.toString() };
    }
 
-   public static MftPath fromString(String path) throws MftPathException {
+   public static MftFolderPath fromString(String path) throws MftPathException {
       if (path == null || path.isEmpty()) {
          throw new MftPathException("Path can't be empty");
       }
       String[] segments = path.split("/");
-      MftPath mftPath = new MftPath(segments[0]);
+      MftFolderPath mftPath = new MftFolderPath(segments[0]);
       if (segments.length == 1) {
          return mftPath;
       }
@@ -142,8 +149,8 @@ public class MftPath {
          return mftPath;
       }
 
-      throw new MftPathException(
-            String.format("Illegal syntax: too many segments in '%s'.", path));
+      throw new MftPathException(String.format(
+            "Illegal syntax: too many segments in '%s'.", path));
    }
 
    public String getSourceIdSegment() {
@@ -156,16 +163,16 @@ public class MftPath {
       this.sourceIdSegment = sourceIdSegment;
    }
 
-   public MailBox getBoxSegment() {
+   public FolderType getBoxSegment() {
       return boxSegment;
    }
 
-   public void setBoxSegment(MailBox boxSegment) {
+   public void setBoxSegment(FolderType boxSegment) {
       this.boxSegment = boxSegment;
    }
-   
+
    public void setBoxSegment(String boxSegment) throws MftPathException {
-      this.boxSegment = MailBox.fromString(boxSegment);
+      this.boxSegment = FolderType.fromString(boxSegment);
    }
 
    public UUID getTransferUUIDSegment() {
@@ -176,7 +183,8 @@ public class MftPath {
       this.transferUUIDSegment = jobUUIDSegment;
    }
 
-   public void setTransferUUIDSegment(String transferUUIDSegment) throws MftPathException {
+   public void setTransferUUIDSegment(String transferUUIDSegment)
+         throws MftPathException {
       try {
          this.transferUUIDSegment = UUID.fromString(transferUUIDSegment);
       } catch (IllegalArgumentException e) {
@@ -203,13 +211,16 @@ public class MftPath {
       }
    }
 
-   public static MftPath outboundFrom(Delivery delivery) throws MftPathException {
-      return new MftPath(delivery.getTransfer().getSource()
-            .getEndpointKey(), MftPath.MailBox.OUTBOUND, delivery.getTransfer()
-            .getUuid(), delivery.getUuid());
+   public static MftFolderPath outboundFrom(Delivery delivery)
+         throws MftPathException {
+      return new MftFolderPath(delivery.getTransfer().getSource().getEndpointKey(),
+            MftFolderPath.FolderType.OUTBOUND, delivery.getTransfer().getUuid(),
+            delivery.getUuid());
    }
-   public static MftPath inboundFrom(Delivery delivery, Endpoint target) throws MftPathException {
-      return new MftPath(target.getEndpointKey(), MftPath.MailBox.INBOUND, 
-            delivery.getTransfer().getUuid(), delivery.getUuid());
+
+   public static MftFolderPath inboundFrom(Delivery delivery) throws MftPathException {
+      return new MftFolderPath(delivery.getTransfer().getSource().getEndpointKey(),
+            MftFolderPath.FolderType.INBOUND, delivery.getTransfer().getUuid(),
+            delivery.getUuid());
    }
 }
