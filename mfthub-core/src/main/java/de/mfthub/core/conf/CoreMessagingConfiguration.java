@@ -12,7 +12,7 @@ import de.mfthub.core.async.listener.MftQueues;
 
 @Configuration 
 @EnableJms
-public class CoreConfiguration {
+public class CoreMessagingConfiguration {
    
    @Bean
    public DefaultJmsListenerContainerFactory defaultJmsListenerContainerFactory() {

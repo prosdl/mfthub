@@ -59,7 +59,7 @@ public class ModelJPAConfiguration {
        Properties properties = new Properties();
        properties.put("hibernate.dialect", hibernateDialect);
        properties.put("hibernate.hbm2ddl.auto", hibernateHbm2ddlAuto);
-       properties.put("hibernate.show_sql", "true");
+       properties.put("hibernate.show_sql", "false");
        properties.put("hibernate.format_sql", "true");
        return properties;
    }

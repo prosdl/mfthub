@@ -4,7 +4,6 @@ import static org.springframework.util.Assert.notEmpty;
 import static org.springframework.util.Assert.notNull;
 
 import java.util.Map;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,9 +17,9 @@ import de.mfthub.model.entities.Endpoint;
 import de.mfthub.model.entities.EndpointConfiguration;
 import de.mfthub.model.entities.Transfer;
 import de.mfthub.model.entities.enums.Protocol;
-import de.mfthub.model.entities.enums.TransferReceivePolicies;
 import de.mfthub.model.entities.enums.TransferSendPolicies;
 import de.mfthub.model.repository.TransferRepository;
+import de.mfthub.model.util.JSON;
 import de.mfthub.transfer.api.TransferClient;
 import de.mfthub.transfer.exception.TransmissionException;
 import de.mfthub.transfer.exception.TransmissionMisconfigurationException;
@@ -52,18 +51,15 @@ public class TransferExecutorImpl implements TransferExecutor {
     * @see de.mfthub.core.mediator.TransferExecutor#receive(de.mfthub.model.entities.Transfer)
     */
    @Override
-   public void receive(Transfer transfer) throws TransmissionException,
+   public void receive(Delivery delivery) throws TransmissionException,
          TransmissionMisconfigurationException {
+      LOG.info("Starting reception phase of delivery {}. Details:\n{}", delivery.getUuid(), JSON.toJson(delivery));
+      
+      Transfer transfer = delivery.getTransfer();
       Endpoint source = transfer.getSource();
       TransferClient<?> transferClient = getTransferClient(source.getProtocol());
 
       new TransferSanityCheck(transfer, transferClient).receiveSanityCheck();
-
-      // TODO aus DB
-      UUID deliveryUUID = UUID.randomUUID();
-      Delivery delivery = new Delivery();
-      delivery.setUuid(deliveryUUID.toString());
-      delivery.setTransfer(transfer);
 
       transferClient.setConfiguration(source.getEndpointConfiguration());
 
@@ -100,17 +96,4 @@ public class TransferExecutorImpl implements TransferExecutor {
       }
 
    }
-
-   public static void main(String[] args) throws Exception {
-      TransferExecutor te = new TransferExecutorImpl();
-      Transfer transfer = new Transfer.Builder("testtransfer")
-            .withRandamUUID()
-            .fromNamedSource("MY_SENDER", "local:///tmp/source")
-            .toTargets("local:///tmp/foo")
-            .files("bar/**/*.pdf")
-            .usingReceivePolicies(
-                  TransferReceivePolicies.LOCKSTRATEGY_PG_LEGACY).build();
-      te.receive(transfer);
-   }
-
 }

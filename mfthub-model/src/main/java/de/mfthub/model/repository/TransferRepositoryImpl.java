@@ -52,8 +52,8 @@ public class TransferRepositoryImpl implements TransferRepositoryCustom {
    @Override
    public Transfer saveOrUpdate(Transfer transfer) {
       if (transfer.getAdministrativeApplication() == null) {
-         transfer
-               .setAdministrativeApplication(AdministrativeApplication.INTERNAL_ADMIN_APP);
+         transfer.setAdministrativeApplication(
+               AdministrativeApplication.INTERNAL_ADMIN_APP);
       }
       if (transfer.getTenant() == null) {
          transfer.setTenant(Tenant.INTERNAL_TENANT);

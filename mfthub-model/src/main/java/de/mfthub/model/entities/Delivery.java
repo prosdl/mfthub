@@ -32,7 +32,7 @@ public class Delivery {
 
    public Delivery() {
       initiated = new Date();
-      state = DeliveryState.INITIATED;
+      setState(DeliveryState.INITIATED);
    }
 
    public String getUuid() {
@@ -73,6 +73,14 @@ public class Delivery {
 
    public void setErrorDetails(String errorDetails) {
       this.errorDetails = errorDetails;
+   }
+
+   public DeliveryState getState() {
+      return state;
+   }
+
+   public void setState(DeliveryState state) {
+      this.state = state;
    }
 
 }
