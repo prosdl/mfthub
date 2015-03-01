@@ -10,8 +10,21 @@ public interface TransferExecutor {
    public void receive(Delivery delivery) throws TransmissionException,
          TransferMisconfigurationException;
 
+   public void receive(String deliveryUuid) throws TransmissionException,
+         TransferExcecutionException;
+
    public void send(Delivery delivery) throws TransmissionException;
 
-   public String createDeliveryForTransfer(String transferUUID) throws TransferExcecutionException;
+   public void send(String deliveryUuid) throws TransmissionException,
+         TransferExcecutionException;
+
+   public String createDeliveryForTransfer(String transferUUID)
+         throws TransferExcecutionException;
+
+   void copyInboundToOutbound(String deliveryUuid)
+         throws TransferExcecutionException;
+
+   void copyInboundToOutbound(Delivery delivery)
+         throws TransferExcecutionException;
 
 }

@@ -23,6 +23,6 @@ public interface TransferClient<E extends EndpointConfiguration> {
    public TransferReceiptInfo receive(Endpoint source, Delivery delivery, Set<TransferReceivePolicies> set)
          throws TransmissionException;
 
-   public void send(Endpoint target, Delivery delivery, Set<TransferSendPolicies> transferPolicies)
+   public TransferSendInfo send(Endpoint target, Delivery delivery, Set<TransferSendPolicies> transferPolicies)
          throws TransmissionException;
 }

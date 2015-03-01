@@ -3,6 +3,8 @@ package de.mfthub.core.mediator;
 import static org.springframework.util.Assert.notEmpty;
 import static org.springframework.util.Assert.notNull;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Date;
 import java.util.Map;
 
@@ -29,8 +31,12 @@ import de.mfthub.model.repository.TransferRepository;
 import de.mfthub.model.util.JSON;
 import de.mfthub.transfer.api.TransferClient;
 import de.mfthub.transfer.api.TransferReceiptInfo;
+import de.mfthub.transfer.api.TransferSendInfo;
 import de.mfthub.transfer.exception.TransmissionException;
 import de.mfthub.transfer.impl.LocalFilecopyTransferClient;
+import de.mfthub.transfer.storage.MftFolder;
+import de.mfthub.transfer.storage.MftPathException;
+import de.mfthub.transfer.storage.MoveFilesVisitor;
 
 @Component
 @Transactional
@@ -82,6 +88,20 @@ public class TransferExecutorImpl implements TransferExecutor {
       
       return delivery.getUuid();
    }
+   
+   
+   @Override
+   public void receive(String deliveryUuid) throws TransmissionException,
+         TransferMisconfigurationException, TransferExcecutionException {
+      Delivery delivery = deliveryRepository.findOne(deliveryUuid);
+
+      if (delivery == null) {
+         throw new TransferExcecutionException(String.format(
+               "Delivery with uuid '%s' not found.", deliveryUuid));
+      }
+      
+      receive(delivery);
+   }
 
    /* (non-Javadoc)
     * @see de.mfthub.core.mediator.TransferExecutor#receive(de.mfthub.model.entities.Transfer)
@@ -122,6 +142,18 @@ public class TransferExecutorImpl implements TransferExecutor {
       LOG.info("Ending receipt phase of delivery {}. Details:\n{}",
             delivery.getUuid(), JSON.toJson(delivery));
    }
+   
+   
+   @Override
+   public void send(String deliveryUuid) throws TransmissionException, TransferExcecutionException {
+      Delivery delivery = deliveryRepository.findOne(deliveryUuid);
+
+      if (delivery == null) {
+         throw new TransferExcecutionException(String.format(
+               "Delivery with uuid '%s' not found.", deliveryUuid));
+      }
+    send(delivery);
+   }
 
    /* (non-Javadoc)
     * @see de.mfthub.core.mediator.TransferExecutor#send(de.mfthub.model.entities.Delivery)
@@ -131,15 +163,79 @@ public class TransferExecutorImpl implements TransferExecutor {
       notNull(delivery);
       notNull(delivery.getTransfer());
       notEmpty(delivery.getTransfer().getTargets());
+      LOG.info("Starting send phase of delivery {}. Details:\n{}", delivery.getUuid(), JSON.toJson(delivery));
 
       Transfer transfer = delivery.getTransfer();
 
       for (Endpoint target : transfer.getTargets()) {
          TransferClient<?> transferClient = getTransferClient(target
                .getProtocol());
-         transferClient.send(target, delivery,
+         TransferSendInfo info = transferClient.send(target, delivery,
                transfer.getTransferSendPolicies());
+
+         deliveryRepository.updateDeliveryState(delivery, 
+               DeliveryState.OUTBOUND, 
+               String.format("Copied %d files (%d bytes) to target: '%s'", 
+                     info.getNumberOfFilesSend(),
+                     info.getTotalBytesSend(),
+                     target.getEndpointKey()), 
+               null);
+      }
+      
+      LOG.info("Ending send phase of delivery {}. Details:\n{}", delivery.getUuid(), JSON.toJson(delivery));
+   }
+   
+   @Override
+   public void copyInboundToOutbound(Delivery delivery) throws TransferExcecutionException {
+      LOG.info("Starting copying inbound to outbound folder for delivery {}.",
+            delivery.getUuid());
+
+      MftFolder inbound;
+      MftFolder outbound;
+      try {
+         inbound = MftFolder.createInboundFromDelivery(delivery);
+         outbound = MftFolder.createOutboundFromDelivery(delivery);
+      } catch (IOException | MftPathException e) {
+         throw new TransferExcecutionException(
+               String.format("Error while creating mft folders for delivery %s", delivery.getUuid()),e);
+      }
+      
+      MoveFilesVisitor visitor = new MoveFilesVisitor("**/*.*",
+            inbound.getPath(), outbound.getPath());
+      try {
+         Files.walkFileTree(inbound.getPath(), visitor);
+      } catch (IOException e) {
+         throw new TransferExcecutionException(
+               String.format(
+                     "Error while copying outbound to inbound folder for delivery %s",
+                     delivery.getUuid()), e);
+      }
+      
+      deliveryRepository.updateDeliveryState(delivery, 
+            DeliveryState.PROCESSING, 
+            String.format("Copied %d files (%d bytes) from '%s' to '%s'", 
+                  visitor.getFileCount(),
+                  visitor.getByteCount(),
+                  inbound.getPath().toString(),
+                  outbound.getPath().toString()
+                  ), 
+            null);
+      
+      LOG.info("Ending copying inbound to outbound for delivery {}. Details:\n{}",
+            delivery.getUuid(), JSON.toJson(delivery));
+   
+   }
+
+   @Override
+   public void copyInboundToOutbound(String deliveryUuid)
+         throws TransferExcecutionException {
+      Delivery delivery = deliveryRepository.findOne(deliveryUuid);
+
+      if (delivery == null) {
+         throw new TransferExcecutionException(String.format(
+               "Delivery with uuid '%s' not found.", deliveryUuid));
       }
 
+      copyInboundToOutbound(delivery);
    }
 }

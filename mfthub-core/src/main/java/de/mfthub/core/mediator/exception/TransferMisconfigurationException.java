@@ -1,7 +1,7 @@
 package de.mfthub.core.mediator.exception;
 
 @SuppressWarnings("serial")
-public class TransferMisconfigurationException extends Exception {
+public class TransferMisconfigurationException extends TransferExcecutionException {
 
    public TransferMisconfigurationException() {
       super();
