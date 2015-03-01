@@ -28,6 +28,7 @@ import de.mfthub.model.repository.DeliveryRepository;
 import de.mfthub.model.repository.TransferRepository;
 import de.mfthub.model.util.JSON;
 import de.mfthub.transfer.api.TransferClient;
+import de.mfthub.transfer.api.TransferReceiptInfo;
 import de.mfthub.transfer.exception.TransmissionException;
 import de.mfthub.transfer.impl.LocalFilecopyTransferClient;
 
@@ -68,10 +69,11 @@ public class TransferExecutorImpl implements TransferExecutor {
       
       final Delivery delivery = new Delivery();
       delivery.setInitiated(new Date());
-      delivery.setState(DeliveryState.INITIATED);
+      delivery.setState(null);
       delivery.setTransfer(transfer);
       try {
          deliveryRepository.save(delivery);
+         deliveryRepository.updateDeliveryState(delivery, DeliveryState.INITIATED, "Created", null);
       } catch (Exception e) {
          throw new TransferExcecutionException(String.format(
                "Exception while trying to create a delivery for transfer '%s'",
@@ -79,7 +81,6 @@ public class TransferExecutorImpl implements TransferExecutor {
       }
       
       return delivery.getUuid();
-        
    }
 
    /* (non-Javadoc)
@@ -88,7 +89,7 @@ public class TransferExecutorImpl implements TransferExecutor {
    @Override
    public void receive(Delivery delivery) throws TransmissionException,
          TransferMisconfigurationException {
-      LOG.info("Starting reception phase of delivery {}. Details:\n{}", delivery.getUuid(), JSON.toJson(delivery));
+      LOG.info("Starting receipt phase of delivery {}. Details:\n{}", delivery.getUuid(), JSON.toJson(delivery));
       
       Transfer transfer = delivery.getTransfer();
       Endpoint source = transfer.getSource();
@@ -103,13 +104,23 @@ public class TransferExecutorImpl implements TransferExecutor {
          // TODO ...
       }
 
-      transferClient.receive(source, delivery,
+      TransferReceiptInfo info = transferClient.receive(source, delivery,
             transfer.getTransferReceivePolicies());
 
       if (transfer.getTransferSendPolicies().contains(
             TransferSendPolicies.LOCKSTRATEGY_PG_LEGACY)) {
          // TODO ...
       }
+      
+      deliveryRepository.updateDeliveryState(delivery, 
+            DeliveryState.INBOUND, 
+            String.format("Copied %d files (%d bytes) to folder: '%s'", 
+                  info.getNumberOfFilesReceived(),
+                  info.getTotalBytesReceived(),
+                  info.getInboundFolder()), 
+            null);
+      LOG.info("Ending receipt phase of delivery {}. Details:\n{}",
+            delivery.getUuid(), JSON.toJson(delivery));
    }
 
    /* (non-Javadoc)

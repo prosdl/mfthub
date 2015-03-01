@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Set;
 
@@ -20,6 +21,7 @@ import de.mfthub.model.entities.enums.TransferClientFeature;
 import de.mfthub.model.entities.enums.TransferReceivePolicies;
 import de.mfthub.model.entities.enums.TransferSendPolicies;
 import de.mfthub.transfer.api.TransferClientSupport;
+import de.mfthub.transfer.api.TransferReceiptInfo;
 import de.mfthub.transfer.exception.TransmissionException;
 import de.mfthub.transfer.storage.MftFolder;
 import de.mfthub.transfer.storage.MftPathException;
@@ -36,6 +38,9 @@ public class LocalFilecopyTransferClient extends TransferClientSupport<EndpointC
       private Path sourcePath;
       private Path targetPath;
       
+      private long fileCount = 0;
+      private long byteCount = 0;
+      
       public MoveFilesVisitor(String pattern, Path sourcePath, Path targetPath) {
          antPathMatcher = new AntPathMatcher();
          antPathMatcher.setCachePatterns(true);
@@ -43,15 +48,27 @@ public class LocalFilecopyTransferClient extends TransferClientSupport<EndpointC
          this.sourcePath = sourcePath;
          this.targetPath = targetPath;
       }
+      
+      public long getFileCount() {
+         return fileCount;
+      }
+
+      public long getByteCount() {
+         return byteCount;
+      }
 
       @Override
       public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
             throws IOException {
-         Path fileRelToSource = sourcePath.relativize(file);
-         LOG.info("Found: '{}'.", fileRelToSource.toString());
-         if (antPathMatcher.match(pattern, fileRelToSource.toString())) {
-            Path targetFile = targetPath.resolve(fileRelToSource);
+         Path fileRelToSourcePath = sourcePath.relativize(file);
+         LOG.info("Found: '{}'.", fileRelToSourcePath.toString());
+         if (antPathMatcher.match(pattern, fileRelToSourcePath.toString())) {
+            Path targetFile = targetPath.resolve(fileRelToSourcePath);
             LOG.info("Moving '{}' to '{}'.", file.toString(), targetFile.toString());
+            Files.createDirectories(targetFile.getParent());
+            Files.copy(file, targetFile, StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
+            fileCount++;
+            byteCount += Files.size(targetFile);
          }
          return FileVisitResult.CONTINUE;
       }
@@ -90,15 +107,15 @@ public class LocalFilecopyTransferClient extends TransferClientSupport<EndpointC
    }
 
    @Override
-   public void receive(Endpoint source, Delivery delivery, Set<TransferReceivePolicies> policies)
+   public TransferReceiptInfo receive(Endpoint source, Delivery delivery, Set<TransferReceivePolicies> policies)
          throws TransmissionException {
       EndpointConfLocalCp conf =  (EndpointConfLocalCp) source.getEndpointConfiguration();
       String from = conf.getDirectory();
       Path sourceDirectory = Paths.get(from);
       
-      MftFolder outbound;
+      MftFolder inbound;
       try {
-         outbound = MftFolder.createOutboundFromDelivery(delivery);
+         inbound = MftFolder.createInboundFromDelivery(delivery);
       } catch (IOException e) {
          throw new TransmissionException(
                String.format("Error while creating outbound box for delivery %s", delivery),e);
@@ -107,13 +124,20 @@ public class LocalFilecopyTransferClient extends TransferClientSupport<EndpointC
                String.format("Error while constructing mft path for delivery %s", delivery),e);
       }
 
-      // TODO fileselector
+      MoveFilesVisitor visitor = new MoveFilesVisitor(delivery.getTransfer().getFileSelector().getFilenameExpression(),sourceDirectory, inbound.getPath());
       try {
-         Files.walkFileTree(sourceDirectory, new MoveFilesVisitor(delivery.getTransfer().getFileSelector().getFilenameExpression(),sourceDirectory, outbound.getPath()));
+         Files.walkFileTree(sourceDirectory, visitor);
+         LOG.info("Moved files: {}, total size in bytes: {}.", visitor.getFileCount(), visitor.getByteCount());
       } catch (IOException e) {
          throw new TransmissionException(
                String.format("Error while scanning directory %s", sourceDirectory),e);
       }
+      
+      TransferReceiptInfo info = new TransferReceiptInfo();
+      info.setNumberOfFilesReceived(visitor.getFileCount());
+      info.setTotalBytesReceived(visitor.getByteCount());
+      info.setInboundFolder(inbound.getPath().toString());
+      return info;
    }
 
    

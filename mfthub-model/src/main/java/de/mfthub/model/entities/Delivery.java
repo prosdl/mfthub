@@ -1,13 +1,18 @@
 package de.mfthub.model.entities;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
 
 import org.hibernate.annotations.GenericGenerator;
 
@@ -29,6 +34,10 @@ public class Delivery {
    
    @Enumerated(EnumType.STRING)
    private DeliveryState state;
+   
+   @OneToMany(cascade={CascadeType.PERSIST, CascadeType.MERGE})
+   @OrderBy("timeOfChange ASC")
+   private List<DeliveryStateChangeEvent> stateChanges = new ArrayList<>();
 
    public Delivery() {
       initiated = new Date();
@@ -81,6 +90,14 @@ public class Delivery {
 
    public void setState(DeliveryState state) {
       this.state = state;
+   }
+
+   public List<DeliveryStateChangeEvent> getStateChanges() {
+      return stateChanges;
+   }
+
+   public void setStateChanges(List<DeliveryStateChangeEvent> stateChanges) {
+      this.stateChanges = stateChanges;
    }
 
 }

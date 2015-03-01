@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 import de.mfthub.model.entities.Delivery;
 
 @Repository
-public interface DeliveryRepository extends CrudRepository<Delivery, String> {
+public interface DeliveryRepository extends CrudRepository<Delivery, String>, DeliveryRepositoryCustom {
 }
