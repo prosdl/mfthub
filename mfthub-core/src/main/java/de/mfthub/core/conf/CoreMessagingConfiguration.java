@@ -8,7 +8,7 @@ import org.springframework.jms.annotation.EnableJms;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.core.JmsTemplate;
 
-import de.mfthub.core.async.listener.MftQueues;
+import de.mfthub.core.async.MftQueues;
 
 @Configuration 
 @EnableJms

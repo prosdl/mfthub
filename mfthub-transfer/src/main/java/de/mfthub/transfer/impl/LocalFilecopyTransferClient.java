@@ -57,6 +57,18 @@ public class LocalFilecopyTransferClient extends TransferClientSupport<EndpointC
       }
       
       @Override
+      public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+            throws IOException {
+         Path fileRelToSource = sourcePath.relativize(dir);
+         LOG.info("Found: '{}'.", fileRelToSource.toString());
+         if (antPathMatcher.match(pattern, fileRelToSource.toString())) {
+            Path targetFile = targetPath.resolve(fileRelToSource);
+            LOG.info("Moving '{}' to '{}'.", dir.toString(), targetFile.toString());
+         }
+         return FileVisitResult.CONTINUE;
+      }
+      
+      @Override
       public FileVisitResult visitFileFailed(Path file, IOException exc)
             throws IOException {
          System.out.println("ERROR: " + exc.getMessage());

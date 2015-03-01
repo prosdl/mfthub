@@ -2,10 +2,10 @@ package de.mfthub.core.mediator;
 
 import java.util.ArrayList;
 
+import de.mfthub.core.mediator.exception.TransferMisconfigurationException;
 import de.mfthub.model.entities.Transfer;
 import de.mfthub.model.entities.enums.TransferReceivePolicies;
 import de.mfthub.transfer.api.TransferClient;
-import de.mfthub.transfer.exception.TransmissionMisconfigurationException;
 
 public class TransferSanityCheck {
 
@@ -19,7 +19,7 @@ public class TransferSanityCheck {
    }
 
    public void receiveSanityCheck()
-         throws TransmissionMisconfigurationException {
+         throws TransferMisconfigurationException {
       ArrayList<String> failureList = new ArrayList<>();
 
       for (TransferReceivePolicies p : transfer.getTransferReceivePolicies()) {
@@ -31,7 +31,7 @@ public class TransferSanityCheck {
          }
       }
       if (!failureList.isEmpty()) {
-         throw new TransmissionMisconfigurationException(failureList.toString());
+         throw new TransferMisconfigurationException(failureList.toString());
       }
    }
 }

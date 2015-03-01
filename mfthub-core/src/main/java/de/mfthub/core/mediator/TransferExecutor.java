@@ -1,14 +1,17 @@
 package de.mfthub.core.mediator;
 
+import de.mfthub.core.mediator.exception.TransferExcecutionException;
+import de.mfthub.core.mediator.exception.TransferMisconfigurationException;
 import de.mfthub.model.entities.Delivery;
 import de.mfthub.transfer.exception.TransmissionException;
-import de.mfthub.transfer.exception.TransmissionMisconfigurationException;
 
 public interface TransferExecutor {
 
-   public abstract void receive(Delivery delivery)
-         throws TransmissionException, TransmissionMisconfigurationException;
+   public void receive(Delivery delivery) throws TransmissionException,
+         TransferMisconfigurationException;
 
-   public abstract void send(Delivery delivery) throws TransmissionException;
+   public void send(Delivery delivery) throws TransmissionException;
+
+   public String createDeliveryForTransfer(String transferUUID) throws TransferExcecutionException;
 
 }

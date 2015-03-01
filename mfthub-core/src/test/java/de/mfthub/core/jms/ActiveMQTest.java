@@ -25,9 +25,9 @@ import org.springframework.jms.core.MessageCreator;
 import org.springframework.stereotype.Component;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import de.mfthub.core.async.MftQueues;
 import de.mfthub.core.async.listener.InboundListener;
 import de.mfthub.core.async.listener.InboundListenerDefaultImpl;
-import de.mfthub.core.async.listener.MftQueues;
 import de.mfthub.core.jms.ActiveMQTest.TestConf;
 
 @SpringApplicationConfiguration(classes = TestConf.class)

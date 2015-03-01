@@ -1,6 +1,6 @@
 package de.mfthub.core.async.listener;
 
 
-public interface InboundListener {
+public interface ProcessingListener {
    public String receive(String msg);
 }
