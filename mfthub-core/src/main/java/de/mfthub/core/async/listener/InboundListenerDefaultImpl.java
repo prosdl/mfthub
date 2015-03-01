@@ -11,9 +11,8 @@ import org.springframework.stereotype.Component;
 
 import de.mfthub.core.async.MftQueues;
 import de.mfthub.core.mediator.TransferExecutor;
+import de.mfthub.core.mediator.exception.TransferExcecutionException;
 import de.mfthub.core.mediator.exception.TransferMisconfigurationException;
-import de.mfthub.model.entities.Delivery;
-import de.mfthub.model.repository.DeliveryRepository;
 import de.mfthub.transfer.exception.TransmissionException;
 
 @Component
@@ -25,9 +24,6 @@ public class InboundListenerDefaultImpl implements InboundListener {
    @Autowired
    private TransferExecutor transferExecutor;
 
-   @Autowired
-   private DeliveryRepository deliveryRepository;
-
    @Override
    @JmsListener(destination = MftQueues.INBOUND, containerFactory = "defaultJmsListenerContainerFactory")
    @SendTo(MftQueues.PROCESSING)
@@ -35,20 +31,15 @@ public class InboundListenerDefaultImpl implements InboundListener {
       LOG.info("{} received message: delivery.uuid='{}'", MftQueues.INBOUND,
             deliveryUuid);
 
-      Delivery delivery = deliveryRepository.findOne(deliveryUuid);
-
-      if (delivery == null) {
-         // TODO error queue
-         throw new RuntimeException(String.format(
-               "Delivery with uuid '%s' not found.", deliveryUuid));
-      }
-
       try {
-         transferExecutor.receive(delivery);
+         transferExecutor.receive(deliveryUuid);
       } catch (TransmissionException e) {
          // TODO error queue
          throw new RuntimeException(e);
       } catch (TransferMisconfigurationException e) {
+         // TODO error queue
+         throw new RuntimeException(e);
+      } catch (TransferExcecutionException e) {
          // TODO error queue
          throw new RuntimeException(e);
       }

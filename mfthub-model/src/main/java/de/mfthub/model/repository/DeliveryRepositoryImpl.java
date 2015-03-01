@@ -23,6 +23,7 @@ public class DeliveryRepositoryImpl implements DeliveryRepositoryCustom {
          DeliveryState deliveryState, String action, String details) {
       Delivery persistedDelivery = entityManager.find(Delivery.class, delivery.getUuid());
       
+      persistedDelivery.setState(deliveryState);
       DeliveryStateChangeEvent changeEvent = new DeliveryStateChangeEvent();
       changeEvent.setAction(action);
       changeEvent.setChangedTo(deliveryState);
