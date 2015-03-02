@@ -18,29 +18,32 @@ import de.mfthub.model.entities.enums.ProcessingType;
 import de.mfthub.model.entities.enums.TransferReceivePolicies;
 
 @SpringBootApplication()
-@Import({ 
-   CoreMessagingConfiguration.class, 
-   ModelJPAConfiguration.class,
-   CoreQuartzConfiguration.class})
+@Import({ CoreMessagingConfiguration.class, ModelJPAConfiguration.class,
+      CoreQuartzConfiguration.class })
 public class CoreMain {
    public static void main(String[] args) {
       ApplicationContext ctx = SpringApplication.run(CoreMain.class, args);
+      
+      
 
-         try {
-            MftCoreAPI mftCoreAPI = ctx.getBean(MftCoreAPI.class);
-            Transfer transfer = new Transfer.Builder("testtransfer")
-                  .withCronSchedule("0/10 * * * * ?")
-                  .fromNamedSource("MY_SENDER", "local:///tmp/source")
-                  .toTargets("local:///tmp/foo")
-                  .files("bar/**/*.pdf")
-                  .addProcessor(ProcessingType.COMPRESS, "destination", "foo.tar.gz")
-                  .usingReceivePolicies(
-                        TransferReceivePolicies.LOCKSTRATEGY_PG_LEGACY).build();
-            mftCoreAPI.saveAndScheduleTransfer(transfer);
-         } catch (BeansException | URISyntaxException | MftCoreAPIException e) {
-            e.printStackTrace();
-            SpringApplication.exit(ctx);
-         }
+      try {
+         MftCoreAPI mftCoreAPI = ctx.getBean(MftCoreAPI.class);
+         mftCoreAPI.bootstrapMft();
+
+         Transfer transfer = new Transfer.Builder("testtransfer")
+               .withCronSchedule("0/10 * * * * ?")
+               .fromNamedSource("MY_SENDER", "local:///tmp/source")
+               .toTargets("local:///tmp/foo")
+               .files("bar/**/*.pdf")
+               .addProcessor(ProcessingType.COMPRESS, "destination",
+                     "foo.tar.gz")
+               .usingReceivePolicies(
+                     TransferReceivePolicies.LOCKSTRATEGY_PG_LEGACY).build();
+         mftCoreAPI.saveAndScheduleTransfer(transfer);
+      } catch (BeansException | URISyntaxException | MftCoreAPIException e) {
+         e.printStackTrace();
+         SpringApplication.exit(ctx);
+      }
 
    }
 }

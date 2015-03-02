@@ -4,11 +4,12 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 import de.mfthub.model.entities.Delivery;
+import de.mfthub.storage.conf.StorageConfiguration;
 import de.mfthub.storage.nio.NioFileTools;
 
 public class MftFolder {
 
-   private String basePath = "/tmp"; // FIXME from application.properties + @value
+   private String basePath = StorageConfiguration.INSTANCE.getStorageRootDirectory();
    private MftFolderPath mftPath;
    private Path path;
 

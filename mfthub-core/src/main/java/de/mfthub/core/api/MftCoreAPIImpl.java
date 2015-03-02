@@ -4,11 +4,13 @@ import javax.transaction.Transactional;
 
 import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import de.mfthub.core.scheduler.MftScheduler;
 import de.mfthub.model.entities.Transfer;
 import de.mfthub.model.repository.TransferRepository;
+import de.mfthub.storage.conf.StorageConfiguration;
 
 @Service
 @Transactional
@@ -19,6 +21,10 @@ public class MftCoreAPIImpl implements MftCoreAPI {
    
    @Autowired
    private TransferRepository transferRepository;
+
+   @Value("${mft.storage.root}")
+   private String mftStorageRoot;
+
    
    /* (non-Javadoc)
     * @see de.mfthub.core.api.MftCoreAPI#saveAndScheduleTransfer(de.mfthub.model.entities.Transfer)
@@ -36,5 +42,11 @@ public class MftCoreAPIImpl implements MftCoreAPI {
       } catch (SchedulerException e) {
          throw new MftCoreAPIException("Problem while trying to schedule transfer.", e);
       }
+   }
+   
+   
+   @Override
+   public void bootstrapMft() {
+      StorageConfiguration.INSTANCE.initialize(mftStorageRoot);
    }
 }
