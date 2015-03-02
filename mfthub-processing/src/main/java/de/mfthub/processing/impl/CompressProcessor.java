@@ -29,9 +29,11 @@ public class CompressProcessor implements Processor {
 
    @Override
    public void processFiles(Delivery delivery) throws ProcessorException {
-      MftFolder outbound;
+      MftFolder processingIn;
+      MftFolder processingOut;
       try {
-         outbound = MftFolder.createOutboundFromDelivery(delivery);
+         processingIn = MftFolder.createProcessingInFromDelivery(delivery);
+         processingOut = MftFolder.createProcessingOutFromDelivery(delivery);
       } catch (IOException e) {
          throw new ProcessorException(
                String.format("Error while creating outbound box for delivery %s", delivery),e);
@@ -43,9 +45,9 @@ public class CompressProcessor implements Processor {
       LOG.info("Compressing files ...");
       TarArchiver tarArchiver = new TarArchiver();
       tarArchiver.setCompression(TarCompressionMethod.gzip);
-      File destination = new File(outbound.getPath().toFile(), "foo.tar.gz");
+      File destination = new File(processingOut.getPath().toFile(), "foo.tar.gz");
       tarArchiver.setDestFile(destination);
-      tarArchiver.addFileSet(new DefaultFileSet(outbound.getPath().toFile()));
+      tarArchiver.addFileSet(new DefaultFileSet(processingIn.getPath().toFile()));
       try {
          tarArchiver.createArchive();
       } catch (ArchiverException | IOException e) {

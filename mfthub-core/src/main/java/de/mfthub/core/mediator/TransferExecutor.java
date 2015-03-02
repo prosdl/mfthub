@@ -21,14 +21,18 @@ public interface TransferExecutor {
    public String createDeliveryForTransfer(String transferUUID)
          throws TransferExcecutionException;
 
-   void copyInboundToOutbound(String deliveryUuid)
+   void prepareProcessing(String deliveryUuid)
          throws TransferExcecutionException;
 
-   void copyInboundToOutbound(Delivery delivery)
+   void prepareProcessing(Delivery delivery)
          throws TransferExcecutionException;
 
    void process(String deliveryUuid) throws TransferExcecutionException;
 
    void process(Delivery delivery) throws TransferExcecutionException;
+
+   void prepareSend(String deliveryUuid) throws TransferExcecutionException;
+
+   void prepareSend(Delivery delivery) throws TransferExcecutionException;
 
 }

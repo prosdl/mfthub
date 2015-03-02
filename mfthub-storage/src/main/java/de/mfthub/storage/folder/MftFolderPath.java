@@ -20,7 +20,7 @@ import de.mfthub.model.entities.Delivery;
  * <xalpha-num>    ::= "A"| ... |"Z"| "a" | ... | "z" | "0" | ... | "9" | "-" | "_" | "."  
  * <xalpha-nums>   ::= } { &lt;xalpha-num&gt; } 
  * {@code
- * <box>           ::= "inbound" | "outbound"
+ * <box>           ::= "inbound" | "outbound" | "processing-in" | "processing-out"
  * <transfer-uuid> ::= <uuid>
  * <delivery-uuid> ::= <uuid>
  * }
@@ -47,7 +47,11 @@ public class MftFolderPath {
    private UUID deliveryUUIDSegment;
 
    public static enum FolderType {
-      INBOUND, OUTBOUND;
+      INBOUND, PROCESSING_IN, PROCESSING_OUT, OUTBOUND;
+      
+      public String toString() {
+         return super.toString().toLowerCase();
+      };
 
       public static FolderType fromString(String s) throws MftPathException {
          return FolderType.valueOf(s.toUpperCase());
@@ -215,6 +219,18 @@ public class MftFolderPath {
          throws MftPathException {
       return new MftFolderPath(delivery.getTransfer().getSource().getEndpointKey(),
             MftFolderPath.FolderType.OUTBOUND, delivery.getTransfer().getUuid(),
+            delivery.getUuid());
+   }
+   public static MftFolderPath processingInFrom(Delivery delivery)
+         throws MftPathException {
+      return new MftFolderPath(delivery.getTransfer().getSource().getEndpointKey(),
+            MftFolderPath.FolderType.PROCESSING_IN, delivery.getTransfer().getUuid(),
+            delivery.getUuid());
+   }
+   public static MftFolderPath processingOutFrom(Delivery delivery)
+         throws MftPathException {
+      return new MftFolderPath(delivery.getTransfer().getSource().getEndpointKey(),
+            MftFolderPath.FolderType.PROCESSING_OUT, delivery.getTransfer().getUuid(),
             delivery.getUuid());
    }
 

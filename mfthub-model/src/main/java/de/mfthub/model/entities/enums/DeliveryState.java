@@ -2,10 +2,11 @@ package de.mfthub.model.entities.enums;
 
 public enum DeliveryState {
    INITIATED,
-   INBOUND,
-   PRE_PROCESSING,
-   PROCESSING,
-   OUTBOUND,
+   FILES_INBOUND,
+   PROCESSING_READY,
+   PROCESSING_DONE,
+   OUTBOUND_READY,
+   FILES_SEND,
    SUCCESS,
    ERROR
 }

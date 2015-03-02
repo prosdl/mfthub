@@ -8,7 +8,7 @@ import de.mfthub.storage.nio.NioFileTools;
 
 public class MftFolder {
 
-   private String basePath = "/tmp"; // FIXME
+   private String basePath = "/tmp"; // FIXME from application.properties + @value
    private MftFolderPath mftPath;
    private Path path;
 
@@ -26,6 +26,16 @@ public class MftFolder {
    public static MftFolder createInboundFromDelivery(Delivery delivery)
          throws IOException, MftPathException {
       return new MftFolder(MftFolderPath.inboundFrom(delivery));
+   }
+   
+   public static MftFolder createProcessingOutFromDelivery(Delivery delivery)
+         throws IOException, MftPathException {
+      return new MftFolder(MftFolderPath.processingOutFrom(delivery));
+   }
+   
+   public static MftFolder createProcessingInFromDelivery(Delivery delivery)
+         throws IOException, MftPathException {
+      return new MftFolder(MftFolderPath.processingInFrom(delivery));
    }
 
    public String getBasePath() {

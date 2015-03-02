@@ -5,11 +5,13 @@ import static org.springframework.util.Assert.notNull;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Date;
 import java.util.Map;
 
 import javax.transaction.Transactional;
 
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -149,7 +151,7 @@ public class TransferExecutorImpl implements TransferExecutor {
          // TODO ...
       }
 
-      deliveryRepository.updateDeliveryState(delivery, DeliveryState.INBOUND,
+      deliveryRepository.updateDeliveryState(delivery, DeliveryState.FILES_INBOUND,
             String.format("Copied %d files (%d bytes) to folder: '%s'",
                   info.getNumberOfFilesReceived(),
                   info.getTotalBytesReceived(), info.getInboundFolder()), null);
@@ -188,7 +190,7 @@ public class TransferExecutorImpl implements TransferExecutor {
                transfer.getTransferSendPolicies());
 
          deliveryRepository.updateDeliveryState(delivery,
-               DeliveryState.OUTBOUND, String.format(
+               DeliveryState.FILES_SEND, String.format(
                      "Copied %d files (%d bytes) to target: '%s'",
                      info.getNumberOfFilesSend(), info.getTotalBytesSend(),
                      target.getEndpointKey()), null);
@@ -199,56 +201,131 @@ public class TransferExecutorImpl implements TransferExecutor {
    }
 
    @Override
-   public void copyInboundToOutbound(Delivery delivery)
+   public void prepareProcessing(Delivery delivery)
          throws TransferExcecutionException {
-      LOG.info("Starting copying inbound to outbound folder for delivery {}.",
+      LOG.info("Starting prepare-processing phase for delivery {}.",
             delivery.getUuid());
 
       MftFolder inbound;
-      MftFolder outbound;
+      MftFolder processingOut;
       try {
          inbound = MftFolder.createInboundFromDelivery(delivery);
-         outbound = MftFolder.createOutboundFromDelivery(delivery);
+         processingOut = MftFolder.createProcessingOutFromDelivery(delivery);
       } catch (IOException | MftPathException e) {
          throw new TransferExcecutionException(String.format(
                "Error while creating mft folders for delivery %s",
                delivery.getUuid()), e);
       }
 
+      LOG.info("copy inbound --> processing_out");
+      
       MoveFilesVisitor visitor = new MoveFilesVisitor("**/*.*",
-            inbound.getPath(), outbound.getPath());
+            inbound.getPath(), processingOut.getPath());
       try {
          Files.walkFileTree(inbound.getPath(), visitor);
       } catch (IOException e) {
          throw new TransferExcecutionException(
                String.format(
-                     "Error while copying outbound to inbound folder for delivery %s",
+                     "Error while copying inbound folder to processing_out folder for delivery %s",
                      delivery.getUuid()), e);
       }
 
       deliveryRepository.updateDeliveryState(delivery,
-            DeliveryState.PROCESSING, String.format(
+            DeliveryState.PROCESSING_READY, String.format(
                   "Copied %d files (%d bytes) from '%s' to '%s'", visitor
                         .getFileCount(), visitor.getByteCount(), inbound
-                        .getPath().toString(), outbound.getPath().toString()),
+                        .getPath().toString(), processingOut.getPath().toString()),
             null);
 
       LOG.info(
-            "Ending copying inbound to outbound for delivery {}. Details:\n{}",
+            "Finished prepare-processing phase for delivery: {}. Details:\n{}",
             delivery.getUuid(), JSON.toJson(delivery));
 
    }
 
    @Override
-   public void copyInboundToOutbound(String deliveryUuid)
+   public void prepareProcessing(String deliveryUuid)
          throws TransferExcecutionException {
-      copyInboundToOutbound(getDelivery(deliveryUuid));
+      prepareProcessing(getDelivery(deliveryUuid));
+   }
+   
+   @Override
+   public void prepareSend(String deliveryUuid) throws TransferExcecutionException {
+      prepareSend(getDelivery(deliveryUuid));
+   }
+   
+   @Override
+   public void prepareSend(Delivery delivery) throws TransferExcecutionException {
+      LOG.info("Starting prepare-send phase for delivery {}.",
+            delivery.getUuid());
+
+      // mv processing -> processingIn
+      MftFolder outbound;
+      MftFolder processingOut;
+      try {
+         outbound = MftFolder.createOutboundFromDelivery(delivery);
+         processingOut = MftFolder.createProcessingOutFromDelivery(delivery);
+      } catch (IOException | MftPathException e) {
+         throw new TransferExcecutionException(String.format(
+               "Error while creating mft folders for delivery %s",
+               delivery.getUuid()), e);
+      }
+      try {
+         Files.move(processingOut.getPath(), outbound.getPath(), StandardCopyOption.ATOMIC_MOVE);
+      } catch (IOException e) {
+         throw new TransferExcecutionException(String.format(
+               "Error while moving processing_out --> outbound for delivery: %s",
+               delivery.getUuid()), e);
+      }
+
+      deliveryRepository.updateDeliveryState(delivery,
+            DeliveryState.OUTBOUND_READY, 
+            "outbound folder successfully created.", null);
+      LOG.info("Finished prepare-send phase for delivery {}.",
+            delivery.getUuid());
    }
    
    @Override
    public void process(Delivery delivery) throws TransferExcecutionException {
-      
+
+      // TODO one jms message per transformation
+      int step = 0;
       for (Processing processing: delivery.getTransfer().getProcessings() ) {
+         step++;
+         LOG.info("Starting processing step: {} for delivery {}.", step, delivery.getUuid());
+         
+         
+         // mv processing -> processingIn
+         MftFolder processingIn;
+         MftFolder processingOut;
+         try {
+            processingIn = MftFolder.createProcessingInFromDelivery(delivery);
+            processingOut = MftFolder.createProcessingOutFromDelivery(delivery);
+         } catch (IOException | MftPathException e) {
+            throw new TransferExcecutionException(String.format(
+                  "Error while creating mft folders for delivery %s",
+                  delivery.getUuid()), e);
+         }
+         
+         try {
+            // FIXME holy cow, deleting a directory in java ...
+            //
+            // * commons.io uses (ugh) File[] files = directory.listFiles();
+            // * Guava deleted (no pun) their recursive delete with:
+            //   "Deprecated. This method suffers from poor symlink detection and 
+            //   race conditions. This functionality can be supported suitably only 
+            //   by shelling out to an operating system command such as rm -rf or del /s. 
+            //   This method is scheduled to be removed from Guava in Guava release 11.0."
+            FileUtils.deleteDirectory(processingIn.getPath().toFile());
+            
+            // pukes if ATOMIC_MOVE not supported, which is good
+            Files.move(processingOut.getPath(), processingIn.getPath(), StandardCopyOption.ATOMIC_MOVE);
+         } catch (IOException e) {
+            throw new TransferExcecutionException(String.format(
+                  "Error while cycling processing in/out folders for delivery: %s",
+                  delivery.getUuid()), e);
+         }
+         
          Processor processor = getProcessor(processing.getType());
          try {
             processor.processFiles(delivery);
@@ -256,7 +333,12 @@ public class TransferExecutorImpl implements TransferExecutor {
             throw new TransferExcecutionException(
                   String.format("Problem during processing with %s.", processing.getType()), e);
          }
+         LOG.info("Finished processing step: {} for delivery {}.", step, delivery.getUuid());
       }
+
+      deliveryRepository.updateDeliveryState(delivery,
+            DeliveryState.PROCESSING_DONE, 
+            String.format("Number of processing steps completed: %d", step), null);
    }
 
    @Override

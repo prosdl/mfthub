@@ -30,8 +30,9 @@ public class ProcessingListenerDefaultImpl implements ProcessingListener {
             deliveryUuid);
       
       try {
-         transferExecutor.copyInboundToOutbound(deliveryUuid);
+         transferExecutor.prepareProcessing(deliveryUuid);
          transferExecutor.process(deliveryUuid);
+         transferExecutor.prepareSend(deliveryUuid);
       } catch (TransferExcecutionException e) {
          // TODO Auto-generated catch block
          throw new RuntimeException(e);
