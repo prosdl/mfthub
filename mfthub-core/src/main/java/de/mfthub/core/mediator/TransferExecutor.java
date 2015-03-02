@@ -27,4 +27,8 @@ public interface TransferExecutor {
    void copyInboundToOutbound(Delivery delivery)
          throws TransferExcecutionException;
 
+   void process(String deliveryUuid) throws TransferExcecutionException;
+
+   void process(Delivery delivery) throws TransferExcecutionException;
+
 }

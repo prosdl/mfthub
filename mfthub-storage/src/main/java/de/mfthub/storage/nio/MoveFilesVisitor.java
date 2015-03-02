@@ -1,4 +1,4 @@
-package de.mfthub.transfer.storage;
+package de.mfthub.storage.nio;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;

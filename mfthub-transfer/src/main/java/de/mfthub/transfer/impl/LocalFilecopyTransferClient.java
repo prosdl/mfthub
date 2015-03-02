@@ -15,13 +15,13 @@ import de.mfthub.model.entities.EndpointConfLocalCp;
 import de.mfthub.model.entities.enums.TransferClientFeature;
 import de.mfthub.model.entities.enums.TransferReceivePolicies;
 import de.mfthub.model.entities.enums.TransferSendPolicies;
+import de.mfthub.storage.folder.MftFolder;
+import de.mfthub.storage.folder.MftPathException;
+import de.mfthub.storage.nio.MoveFilesVisitor;
 import de.mfthub.transfer.api.TransferClientSupport;
 import de.mfthub.transfer.api.TransferReceiptInfo;
 import de.mfthub.transfer.api.TransferSendInfo;
 import de.mfthub.transfer.exception.TransmissionException;
-import de.mfthub.transfer.storage.MftFolder;
-import de.mfthub.transfer.storage.MftPathException;
-import de.mfthub.transfer.storage.MoveFilesVisitor;
 
 public class LocalFilecopyTransferClient extends TransferClientSupport<EndpointConfLocalCp> {
 

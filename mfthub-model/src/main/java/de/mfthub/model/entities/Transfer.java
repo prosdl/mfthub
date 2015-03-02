@@ -27,6 +27,7 @@ import org.hibernate.annotations.GenericGenerator;
 import com.google.common.collect.Sets;
 
 import de.mfthub.model.entities.enums.FileSelectorStrategy;
+import de.mfthub.model.entities.enums.ProcessingType;
 import de.mfthub.model.entities.enums.Protocol;
 import de.mfthub.model.entities.enums.TransferReceivePolicies;
 import de.mfthub.model.entities.enums.TransferSendPolicies;
@@ -68,7 +69,7 @@ public class Transfer {
    private Tenant tenant;
    
    @OneToMany(cascade={CascadeType.PERSIST, CascadeType.MERGE})
-   private List<Transformation> transformations = new ArrayList<>();
+   private List<Processing> processings = new ArrayList<>();
    
    @OneToOne(cascade={CascadeType.PERSIST, CascadeType.MERGE})
    private FileSelector fileSelector;
@@ -84,7 +85,7 @@ public class Transfer {
       private Set<TransferReceivePolicies> transferReceivePolicies = new HashSet<>();
       private AdministrativeApplication administrativeApplication;
       private Tenant tenant;
-      private List<Transformation> transformations = new ArrayList<>();
+      private List<Processing> processings = new ArrayList<>();
       private FileSelector fileSelector;
 
       public Builder(String name) {
@@ -158,6 +159,24 @@ public class Transfer {
          return this;
       }
       
+      public Builder addProcessor(ProcessingType type, String... arg) {
+         Processing processing = new Processing();
+         processing.setType(type);
+         
+         if (arg.length  % 2 != 0) {
+            throw new IllegalArgumentException("Need even number of args ...");
+         }
+         processing.setBindings(new HashSet<ProcessingParamBinding>());
+         for (int i=0; i < arg.length/2; i++) {
+            ProcessingParamBinding binding = new ProcessingParamBinding();
+            binding.setParam(arg[i*2]);
+            binding.setValue(arg[i*2+1]);
+            processing.getBindings().add(binding);
+         }
+         processings.add(processing);
+         return this;
+      }
+      
       public Transfer build() {
          return new Transfer(this);
       }
@@ -173,7 +192,7 @@ public class Transfer {
       this.tenant = builder.tenant;
       this.transferReceivePolicies = builder.transferReceivePolicies;
       this.transferSendPolicies = builder.transferSendPolicies;
-      this.transformations = builder.transformations;
+      this.processings = builder.processings;
       this.trigger = builder.trigger;
       this.uuid = builder.uuid;
    }
@@ -212,12 +231,12 @@ public class Transfer {
       this.tenant = tenant;
    }
 
-   public List<Transformation> getTransformations() {
-      return transformations;
+   public List<Processing> getProcessings() {
+      return processings;
    }
 
-   public void setTransformations(List<Transformation> transformations) {
-      this.transformations = transformations;
+   public void setProcessings(List<Processing> transformations) {
+      this.processings = transformations;
    }
 
    public Set<TransferSendPolicies> getTransferSendPolicies() {

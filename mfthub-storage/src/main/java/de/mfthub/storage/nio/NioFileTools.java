@@ -1,9 +1,11 @@
-package de.mfthub.transfer.storage;
+package de.mfthub.storage.nio;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import de.mfthub.storage.folder.MftFolderPath;
 
 public class NioFileTools {
 

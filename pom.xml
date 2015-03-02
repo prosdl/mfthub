@@ -14,6 +14,8 @@
       <module>mfthub-model</module>
       <module>mfthub-rest</module>
       <module>mfthub-transfer</module>
+      <module>mfthub-processing</module>
+      <module>mfthub-storage</module>
    </modules>
 
    <prerequisites>

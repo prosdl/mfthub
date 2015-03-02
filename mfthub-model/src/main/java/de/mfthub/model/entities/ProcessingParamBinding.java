@@ -5,19 +5,25 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.validation.constraints.NotNull;
+
+import org.codehaus.jackson.annotate.JsonIgnore;
 
 @Entity
-public class TransformationParamBinding {
+public class ProcessingParamBinding {
    @Id
    @GeneratedValue(strategy=GenerationType.AUTO)   
    private Long id;
    
-   @ManyToOne(optional=false)
-   private TransformationParam param;
+   @JsonIgnore
+   @ManyToOne
+   private Processing processing;
+   
+   @NotNull
+   private String param;
    private String value;
    
-   public TransformationParamBinding() {
-      
+   public ProcessingParamBinding() {
    }
 
    public Long getId() {
@@ -28,20 +34,20 @@ public class TransformationParamBinding {
       this.id = id;
    }
 
-   public TransformationParam getParam() {
-      return param;
-   }
-
-   public void setParam(TransformationParam param) {
-      this.param = param;
-   }
-
    public String getValue() {
       return value;
    }
 
    public void setValue(String value) {
       this.value = value;
+   }
+
+   public String getParam() {
+      return param;
+   }
+
+   public void setParam(String param) {
+      this.param = param;
    }
    
    

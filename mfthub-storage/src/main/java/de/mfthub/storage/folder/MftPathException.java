@@ -1,4 +1,4 @@
-package de.mfthub.transfer.storage;
+package de.mfthub.storage.folder;
 
 @SuppressWarnings("serial")
 public class MftPathException extends Exception {

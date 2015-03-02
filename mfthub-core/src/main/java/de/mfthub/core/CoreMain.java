@@ -14,6 +14,7 @@ import de.mfthub.core.conf.CoreMessagingConfiguration;
 import de.mfthub.core.conf.CoreQuartzConfiguration;
 import de.mfthub.model.conf.ModelJPAConfiguration;
 import de.mfthub.model.entities.Transfer;
+import de.mfthub.model.entities.enums.ProcessingType;
 import de.mfthub.model.entities.enums.TransferReceivePolicies;
 
 @SpringBootApplication()
@@ -32,6 +33,7 @@ public class CoreMain {
                   .fromNamedSource("MY_SENDER", "local:///tmp/source")
                   .toTargets("local:///tmp/foo")
                   .files("bar/**/*.pdf")
+                  .addProcessor(ProcessingType.COMPRESS, "destination", "foo.tar.gz")
                   .usingReceivePolicies(
                         TransferReceivePolicies.LOCKSTRATEGY_PG_LEGACY).build();
             mftCoreAPI.saveAndScheduleTransfer(transfer);
