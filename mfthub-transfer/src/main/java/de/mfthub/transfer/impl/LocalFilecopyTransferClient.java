@@ -17,7 +17,7 @@ import de.mfthub.model.entities.enums.TransferReceivePolicies;
 import de.mfthub.model.entities.enums.TransferSendPolicies;
 import de.mfthub.storage.folder.MftFolder;
 import de.mfthub.storage.folder.MftPathException;
-import de.mfthub.storage.nio.MoveFilesVisitor;
+import de.mfthub.storage.nio.MoveOrCopyFilesVisitor;
 import de.mfthub.transfer.api.TransferClientSupport;
 import de.mfthub.transfer.api.TransferReceiptInfo;
 import de.mfthub.transfer.api.TransferSendInfo;
@@ -54,7 +54,7 @@ public class LocalFilecopyTransferClient extends TransferClientSupport<EndpointC
                String.format("Error while constructing mft path for delivery %s", delivery),e);
       }
 
-      MoveFilesVisitor visitor = new MoveFilesVisitor("**/*.*",outbound.getPath(),targetDirectory);
+      MoveOrCopyFilesVisitor visitor = new MoveOrCopyFilesVisitor("**/*.*",outbound.getPath(),targetDirectory);
       try {
          Files.walkFileTree(outbound.getPath(), visitor);
          LOG.info("Moved files: {}, total size in bytes: {}.", visitor.getFileCount(), visitor.getByteCount());
@@ -88,7 +88,7 @@ public class LocalFilecopyTransferClient extends TransferClientSupport<EndpointC
                String.format("Error while constructing mft path for delivery %s", delivery),e);
       }
 
-      MoveFilesVisitor visitor = new MoveFilesVisitor(delivery.getTransfer().getFileSelector().getFilenameExpression(),sourceDirectory, inbound.getPath());
+      MoveOrCopyFilesVisitor visitor = new MoveOrCopyFilesVisitor(delivery.getTransfer().getFileSelector().getFilenameExpression(),sourceDirectory, inbound.getPath());
       try {
          Files.walkFileTree(sourceDirectory, visitor);
          LOG.info("Moved files: {}, total size in bytes: {}.", visitor.getFileCount(), visitor.getByteCount());

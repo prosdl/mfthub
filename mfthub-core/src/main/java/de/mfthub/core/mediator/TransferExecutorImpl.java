@@ -38,7 +38,7 @@ import de.mfthub.processing.api.exception.ProcessorException;
 import de.mfthub.processing.impl.CompressProcessor;
 import de.mfthub.storage.folder.MftFolder;
 import de.mfthub.storage.folder.MftPathException;
-import de.mfthub.storage.nio.MoveFilesVisitor;
+import de.mfthub.storage.nio.MoveOrCopyFilesVisitor;
 import de.mfthub.transfer.api.TransferClient;
 import de.mfthub.transfer.api.TransferReceiptInfo;
 import de.mfthub.transfer.api.TransferSendInfo;
@@ -219,7 +219,7 @@ public class TransferExecutorImpl implements TransferExecutor {
 
       LOG.info("copy inbound --> processing_out");
       
-      MoveFilesVisitor visitor = new MoveFilesVisitor("**/*.*",
+      MoveOrCopyFilesVisitor visitor = new MoveOrCopyFilesVisitor("**/*.*",
             inbound.getPath(), processingOut.getPath());
       try {
          Files.walkFileTree(inbound.getPath(), visitor);
