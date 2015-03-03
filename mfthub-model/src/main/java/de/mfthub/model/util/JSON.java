@@ -7,7 +7,6 @@ import org.codehaus.jackson.map.SerializationConfig;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 public class JSON {
-   
    // ObjectMappers are thread safe, see: jackson faq
    private final static ObjectMapper JACKSON_JSON_OBJECT_MAPPER = initObjectMapper();
    
