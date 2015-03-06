@@ -31,7 +31,7 @@ public class CoreMain {
          Transfer transfer = new Transfer.Builder("testtransfer")
                .withCronSchedule("0/10 * * * * ?")
                .fromNamedSource("MY_SENDER", "local:///tmp/source")
-               .toTargets("local:///tmp/target1", "local:///tmp/target2")
+               .toTargets("local:///tmp/target1", "scp://scptest@localhost:22/home/scptest/receive?password=scptest")
                .files("bar/**/*.pdf")
                .addProcessor(ProcessingType.COMPRESS, "destination",
                      "foo.tar.gz")

@@ -4,6 +4,11 @@ import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.SecureRandom;
+import java.util.Map;
+
+import org.codehaus.jackson.map.ObjectMapper;
+
+import com.google.common.base.Splitter;
 
 import de.mfthub.model.entities.Endpoint;
 import de.mfthub.model.entities.EndpointConfLocalCp;
@@ -14,7 +19,9 @@ public enum Protocol {
    SCP {
       @Override
       public EndpointConfiguration construct(URI uri) {
-         EndpointConfScp conf = new EndpointConfScp();
+         Map<String,String> params = getQueryMap(uri);
+         ObjectMapper om = new ObjectMapper();
+         EndpointConfScp conf = om.convertValue(params, EndpointConfScp.class);
          conf.setDnsName(uri.getHost());
          conf.setPort(uri.getPort());
          conf.setUserid(uri.getUserInfo());
@@ -32,6 +39,11 @@ public enum Protocol {
    };
 
    public abstract EndpointConfiguration construct(URI uri);
+   
+   private static Map<String, String> getQueryMap(URI uri) {
+      String query = uri.getQuery();
+      return Splitter.on('&').trimResults().withKeyValueSeparator('=').split(query);
+   }
 
    private Protocol() {
    }

@@ -23,7 +23,6 @@ import de.mfthub.core.mediator.exception.TransferExcecutionException;
 import de.mfthub.core.mediator.exception.TransferMisconfigurationException;
 import de.mfthub.model.entities.Delivery;
 import de.mfthub.model.entities.Endpoint;
-import de.mfthub.model.entities.EndpointConfiguration;
 import de.mfthub.model.entities.Processing;
 import de.mfthub.model.entities.Transfer;
 import de.mfthub.model.entities.enums.DeliveryState;
@@ -44,6 +43,7 @@ import de.mfthub.transfer.api.TransferReceiptInfo;
 import de.mfthub.transfer.api.TransferSendInfo;
 import de.mfthub.transfer.exception.TransmissionException;
 import de.mfthub.transfer.impl.local.LocalFilecopyTransferClient;
+import de.mfthub.transfer.impl.ssh.ScpTransferClient;
 
 @Component
 @Transactional
@@ -55,7 +55,9 @@ public class TransferExecutorImpl implements TransferExecutor {
 
    private static Map<Protocol, TransferClient<?>> initTransferClientMap() {
       return ImmutableMap.<Protocol, TransferClient<?>> builder()
-            .put(Protocol.LOCAL, new LocalFilecopyTransferClient()).build();
+            .put(Protocol.LOCAL, new LocalFilecopyTransferClient())
+            .put(Protocol.SCP, new ScpTransferClient())
+            .build();
    }
 
    private static Map<ProcessingType, Processor> initProcessorMap() {
@@ -73,9 +75,13 @@ public class TransferExecutorImpl implements TransferExecutor {
 
    }
 
-   private static TransferClient<? extends EndpointConfiguration> getTransferClient(
+   private static TransferClient<?> getTransferClient(
          Protocol protocol) {
-      return transferClientMap.get(protocol);
+      TransferClient<?> client = transferClientMap.get(protocol);
+      if (client == null) {
+         throw new IllegalStateException("No registered client for protocol: " + protocol);
+      }
+      return client;
    }
    
    private static Processor getProcessor(ProcessingType type) {
@@ -186,6 +192,7 @@ public class TransferExecutorImpl implements TransferExecutor {
       for (Endpoint target : transfer.getTargets()) {
          TransferClient<?> transferClient = getTransferClient(target
                .getProtocol());
+         transferClient.setConfiguration(target.getEndpointConfiguration());
          TransferSendInfo info = transferClient.send(target, delivery,
                transfer.getTransferSendPolicies());
 

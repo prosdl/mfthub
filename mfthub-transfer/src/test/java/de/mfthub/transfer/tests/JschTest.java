@@ -23,6 +23,7 @@ import com.jcraft.jsch.Session;
 import com.jcraft.jsch.UserInfo;
 
 import de.mfthub.transfer.exception.TransmissionException;
+import de.mfthub.transfer.impl.ssh.ScpFromTransfer;
 import de.mfthub.transfer.impl.ssh.ScpSimplePasswordUserInfo;
 import de.mfthub.transfer.impl.ssh.ScpToFilesVisitor;
 import de.mfthub.transfer.impl.ssh.ScpTools;
@@ -135,5 +136,31 @@ public class JschTest {
 
       channel.disconnect();
       session.disconnect();
+   }
+   
+   @Test
+   public void testReceiveMultipleFilesFromSSH() throws JSchException, IOException {
+      JSch jsch = new JSch();
+      Session session = jsch.getSession("scptest", "localhost", 22);
+      session.setUserInfo(userInfo);
+      session.setConfig("StrictHostKeyChecking", "no");
+      session.connect();
+
+      String cmd = "scp -r -f /home/scptest/receive/*";
+      ChannelExec channel = (ChannelExec) session.openChannel("exec");
+      channel.setCommand(cmd);
+      
+      OutputStream out = channel.getOutputStream();
+      InputStream in = channel.getInputStream();
+
+      channel.connect();
+      ScpTools.writeAck(out);
+      
+      new ScpFromTransfer(in, out, Paths.get("/tmp/from_scp")).transfer();
+      
+      channel.disconnect();
+      session.disconnect();
+      
+      
    }
 }

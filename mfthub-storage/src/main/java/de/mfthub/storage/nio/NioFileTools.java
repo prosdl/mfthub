@@ -5,11 +5,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import de.mfthub.storage.folder.MftFolderPath;
+import de.mfthub.storage.folder.MftPathBuilder;
 
 public class NioFileTools {
 
-   public static  Path mftPathToNIOPath(String basePath, MftFolderPath mftPath) {
+   public static  Path mftPathToNIOPath(String basePath, MftPathBuilder mftPath) {
       return Paths.get(basePath, mftPath.toSegmentArray());
    }
 

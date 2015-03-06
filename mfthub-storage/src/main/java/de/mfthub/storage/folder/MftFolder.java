@@ -10,10 +10,10 @@ import de.mfthub.storage.nio.NioFileTools;
 public class MftFolder {
 
    private String basePath = StorageConfiguration.INSTANCE.getStorageRootDirectory();
-   private MftFolderPath mftPath;
+   private MftPathBuilder mftPath;
    private Path path;
 
-   private MftFolder(MftFolderPath mftPath) throws IOException {
+   private MftFolder(MftPathBuilder mftPath) throws IOException {
       this.mftPath = mftPath;
       path = NioFileTools.mftPathToNIOPath(basePath, mftPath);
       NioFileTools.createDirectoryIfNotExists(path);
@@ -21,29 +21,29 @@ public class MftFolder {
 
    public static MftFolder createOutboundFromDelivery(Delivery delivery)
          throws IOException, MftPathException {
-      return new MftFolder(MftFolderPath.outboundFrom(delivery));
+      return new MftFolder(MftPathBuilder.outboundFrom(delivery));
    }
 
    public static MftFolder createInboundFromDelivery(Delivery delivery)
          throws IOException, MftPathException {
-      return new MftFolder(MftFolderPath.inboundFrom(delivery));
+      return new MftFolder(MftPathBuilder.inboundFrom(delivery));
    }
    
    public static MftFolder createProcessingOutFromDelivery(Delivery delivery)
          throws IOException, MftPathException {
-      return new MftFolder(MftFolderPath.processingOutFrom(delivery));
+      return new MftFolder(MftPathBuilder.processingOutFrom(delivery));
    }
    
    public static MftFolder createProcessingInFromDelivery(Delivery delivery)
          throws IOException, MftPathException {
-      return new MftFolder(MftFolderPath.processingInFrom(delivery));
+      return new MftFolder(MftPathBuilder.processingInFrom(delivery));
    }
 
    public String getBasePath() {
       return basePath;
    }
 
-   public MftFolderPath getMftPath() {
+   public MftPathBuilder getMftPath() {
       return mftPath;
    }
 

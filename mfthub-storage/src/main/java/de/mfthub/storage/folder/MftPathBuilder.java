@@ -40,7 +40,7 @@ import de.mfthub.model.entities.Delivery;
  * @author prosdl
  * 
  */
-public class MftFolderPath {
+public class MftPathBuilder {
    private String sourceIdSegment;
    private FolderType boxSegment;
    private UUID transferUUIDSegment;
@@ -58,35 +58,35 @@ public class MftFolderPath {
       }
    }
 
-   public MftFolderPath(String sourceId) throws MftPathException {
+   public MftPathBuilder(String sourceId) throws MftPathException {
       validateSourceIDSyntax(sourceId);
       this.setSourceIdSegment(sourceId);
    }
 
-   public MftFolderPath(String sourceId, FolderType box) throws MftPathException {
+   public MftPathBuilder(String sourceId, FolderType box) throws MftPathException {
       this(sourceId);
       this.boxSegment = box;
    }
 
-   public MftFolderPath(String sourceId, FolderType box, UUID transferUUID)
+   public MftPathBuilder(String sourceId, FolderType box, UUID transferUUID)
          throws MftPathException {
       this(sourceId, box);
       this.transferUUIDSegment = transferUUID;
    }
 
-   public MftFolderPath(String sourceId, FolderType box, String transferUUID)
+   public MftPathBuilder(String sourceId, FolderType box, String transferUUID)
          throws MftPathException {
       this(sourceId, box);
       setTransferUUIDSegment(transferUUID);
    }
 
-   public MftFolderPath(String sourceId, FolderType box, UUID transferUUID,
+   public MftPathBuilder(String sourceId, FolderType box, UUID transferUUID,
          UUID deliveryUUID) throws MftPathException {
       this(sourceId, box, transferUUID);
       this.deliveryUUIDSegment = deliveryUUID;
    }
 
-   public MftFolderPath(String sourceId, FolderType box, String transferUUID,
+   public MftPathBuilder(String sourceId, FolderType box, String transferUUID,
          String deliveryUUID) throws MftPathException {
       this(sourceId, box, transferUUID);
       setDeliveryUUIDSegment(deliveryUUID);
@@ -131,12 +131,12 @@ public class MftFolderPath {
             transferUUIDSegment.toString(), deliveryUUIDSegment.toString() };
    }
 
-   public static MftFolderPath fromString(String path) throws MftPathException {
+   public static MftPathBuilder fromString(String path) throws MftPathException {
       if (path == null || path.isEmpty()) {
          throw new MftPathException("Path can't be empty");
       }
       String[] segments = path.split("/");
-      MftFolderPath mftPath = new MftFolderPath(segments[0]);
+      MftPathBuilder mftPath = new MftPathBuilder(segments[0]);
       if (segments.length == 1) {
          return mftPath;
       }
@@ -215,28 +215,28 @@ public class MftFolderPath {
       }
    }
 
-   public static MftFolderPath outboundFrom(Delivery delivery)
+   public static MftPathBuilder outboundFrom(Delivery delivery)
          throws MftPathException {
-      return new MftFolderPath(delivery.getTransfer().getSource().getEndpointKey(),
-            MftFolderPath.FolderType.OUTBOUND, delivery.getTransfer().getUuid(),
+      return new MftPathBuilder(delivery.getTransfer().getSource().getEndpointKey(),
+            MftPathBuilder.FolderType.OUTBOUND, delivery.getTransfer().getUuid(),
             delivery.getUuid());
    }
-   public static MftFolderPath processingInFrom(Delivery delivery)
+   public static MftPathBuilder processingInFrom(Delivery delivery)
          throws MftPathException {
-      return new MftFolderPath(delivery.getTransfer().getSource().getEndpointKey(),
-            MftFolderPath.FolderType.PROCESSING_IN, delivery.getTransfer().getUuid(),
+      return new MftPathBuilder(delivery.getTransfer().getSource().getEndpointKey(),
+            MftPathBuilder.FolderType.PROCESSING_IN, delivery.getTransfer().getUuid(),
             delivery.getUuid());
    }
-   public static MftFolderPath processingOutFrom(Delivery delivery)
+   public static MftPathBuilder processingOutFrom(Delivery delivery)
          throws MftPathException {
-      return new MftFolderPath(delivery.getTransfer().getSource().getEndpointKey(),
-            MftFolderPath.FolderType.PROCESSING_OUT, delivery.getTransfer().getUuid(),
+      return new MftPathBuilder(delivery.getTransfer().getSource().getEndpointKey(),
+            MftPathBuilder.FolderType.PROCESSING_OUT, delivery.getTransfer().getUuid(),
             delivery.getUuid());
    }
 
-   public static MftFolderPath inboundFrom(Delivery delivery) throws MftPathException {
-      return new MftFolderPath(delivery.getTransfer().getSource().getEndpointKey(),
-            MftFolderPath.FolderType.INBOUND, delivery.getTransfer().getUuid(),
+   public static MftPathBuilder inboundFrom(Delivery delivery) throws MftPathException {
+      return new MftPathBuilder(delivery.getTransfer().getSource().getEndpointKey(),
+            MftPathBuilder.FolderType.INBOUND, delivery.getTransfer().getUuid(),
             delivery.getUuid());
    }
 }

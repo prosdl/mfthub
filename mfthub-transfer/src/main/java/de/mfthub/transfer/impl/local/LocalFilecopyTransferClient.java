@@ -16,7 +16,6 @@ import de.mfthub.model.entities.enums.TransferClientFeature;
 import de.mfthub.model.entities.enums.TransferReceivePolicies;
 import de.mfthub.model.entities.enums.TransferSendPolicies;
 import de.mfthub.storage.folder.MftFolder;
-import de.mfthub.storage.folder.MftPathException;
 import de.mfthub.storage.nio.MoveOrCopyFilesVisitor;
 import de.mfthub.transfer.api.TransferClientSupport;
 import de.mfthub.transfer.api.TransferReceiptInfo;
@@ -38,21 +37,10 @@ public class LocalFilecopyTransferClient extends TransferClientSupport<EndpointC
    @Override
    public TransferSendInfo send(Endpoint target, Delivery delivery, Set<TransferSendPolicies> policies)
          throws TransmissionException {
-      EndpointConfLocalCp conf =  (EndpointConfLocalCp) target.getEndpointConfiguration();
-      String to = conf.getDirectory();
+      String to = getConfiguration().getDirectory();
       Path targetDirectory = Paths.get(to);  
       
-      MftFolder outbound;
-      
-      try {
-         outbound = MftFolder.createOutboundFromDelivery(delivery);
-      } catch (IOException e) {
-         throw new TransmissionException(
-               String.format("Error while creating inbound box for delivery %s", delivery),e);
-      } catch (MftPathException e) {
-         throw new TransmissionException(
-               String.format("Error while constructing mft path for delivery %s", delivery),e);
-      }
+      MftFolder outbound = getOutbound(delivery);
 
       MoveOrCopyFilesVisitor visitor = new MoveOrCopyFilesVisitor("**/*.*",outbound.getPath(),targetDirectory);
       try {
@@ -73,20 +61,10 @@ public class LocalFilecopyTransferClient extends TransferClientSupport<EndpointC
    @Override
    public TransferReceiptInfo receive(Endpoint source, Delivery delivery, Set<TransferReceivePolicies> policies)
          throws TransmissionException {
-      EndpointConfLocalCp conf =  (EndpointConfLocalCp) source.getEndpointConfiguration();
-      String from = conf.getDirectory();
+      String from = getConfiguration().getDirectory();
       Path sourceDirectory = Paths.get(from);
       
-      MftFolder inbound;
-      try {
-         inbound = MftFolder.createInboundFromDelivery(delivery);
-      } catch (IOException e) {
-         throw new TransmissionException(
-               String.format("Error while creating outbound box for delivery %s", delivery),e);
-      } catch (MftPathException e) {
-         throw new TransmissionException(
-               String.format("Error while constructing mft path for delivery %s", delivery),e);
-      }
+      MftFolder inbound = getInbound(delivery);
 
       MoveOrCopyFilesVisitor visitor = new MoveOrCopyFilesVisitor(delivery.getTransfer().getFileSelector().getFilenameExpression(),sourceDirectory, inbound.getPath());
       try {
