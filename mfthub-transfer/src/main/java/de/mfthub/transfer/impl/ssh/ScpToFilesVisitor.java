@@ -12,8 +12,22 @@ import java.nio.file.attribute.BasicFileAttributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Recursively copies files from local to remote via Jsch/scp.
+ * 
+ * References:
+ * 
+ * <ul>
+ * <li>https://blogs.oracle.com/janp/entry/how_the_scp_protocol_works</li>
+ * <li>https://svn.apache.org/repos/asf/ant/core/tags/ANT_194/src/main/org/apache/tools/ant/taskdefs/optional/ssh/ScpToMessage.java</li>
+ * </ul>
+ * 
+ * @author prosdl
+ *
+ */
 public class ScpToFilesVisitor extends SimpleFileVisitor<Path> {
    private static Logger LOG = LoggerFactory.getLogger(ScpToFilesVisitor.class);
+   private static int BUFFER_SIZE = 1024;
 
    private InputStream in;
    private OutputStream out;
@@ -61,7 +75,7 @@ public class ScpToFilesVisitor extends SimpleFileVisitor<Path> {
             "C0644 " + Files.size(file) + " " + file.getFileName() + "\n");
       ScpTools.readAck(in);
 
-      byte[] buffer = new byte[1024];
+      byte[] buffer = new byte[BUFFER_SIZE];
       try (InputStream fis = Files.newInputStream(file)) {
          while (true) {
             int len = fis.read(buffer, 0, buffer.length);
