@@ -23,8 +23,6 @@ import de.mfthub.model.entities.enums.TransferReceivePolicies;
 public class CoreMain {
    public static void main(String[] args) {
       ApplicationContext ctx = SpringApplication.run(CoreMain.class, args);
-      
-      
 
       try {
          MftCoreAPI mftCoreAPI = ctx.getBean(MftCoreAPI.class);
@@ -33,7 +31,7 @@ public class CoreMain {
          Transfer transfer = new Transfer.Builder("testtransfer")
                .withCronSchedule("0/10 * * * * ?")
                .fromNamedSource("MY_SENDER", "local:///tmp/source")
-               .toTargets("local:///tmp/foo")
+               .toTargets("local:///tmp/target1", "local:///tmp/target2")
                .files("bar/**/*.pdf")
                .addProcessor(ProcessingType.COMPRESS, "destination",
                      "foo.tar.gz")

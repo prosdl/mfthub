@@ -1,4 +1,4 @@
-package de.mfthub.transfer.impl;
+package de.mfthub.transfer.impl.local;
 
 import java.io.IOException;
 import java.nio.file.Files;

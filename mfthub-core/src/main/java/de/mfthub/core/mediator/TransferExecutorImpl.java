@@ -43,7 +43,7 @@ import de.mfthub.transfer.api.TransferClient;
 import de.mfthub.transfer.api.TransferReceiptInfo;
 import de.mfthub.transfer.api.TransferSendInfo;
 import de.mfthub.transfer.exception.TransmissionException;
-import de.mfthub.transfer.impl.LocalFilecopyTransferClient;
+import de.mfthub.transfer.impl.local.LocalFilecopyTransferClient;
 
 @Component
 @Transactional
