@@ -29,7 +29,8 @@ import de.mfthub.transfer.exception.TransmissionException;
 public class ScpTransferClient extends TransferClientSupport<EndpointConfScp> {
    private static Logger LOG = LoggerFactory.getLogger(ScpTransferClient.class);
    
-   public ScpTransferClient() {
+   public ScpTransferClient(EndpointConfScp conf) {
+      super(conf);
       initalizeFeatures(
             TransferClientFeature.TF_SUPPORTS_RECEIVE_FILES,
             TransferClientFeature.TF_SUPPORTS_SEND_FILES

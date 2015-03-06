@@ -4,6 +4,7 @@ import static org.springframework.util.Assert.notEmpty;
 import static org.springframework.util.Assert.notNull;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Date;
@@ -23,6 +24,7 @@ import de.mfthub.core.mediator.exception.TransferExcecutionException;
 import de.mfthub.core.mediator.exception.TransferMisconfigurationException;
 import de.mfthub.model.entities.Delivery;
 import de.mfthub.model.entities.Endpoint;
+import de.mfthub.model.entities.EndpointConfiguration;
 import de.mfthub.model.entities.Processing;
 import de.mfthub.model.entities.Transfer;
 import de.mfthub.model.entities.enums.DeliveryState;
@@ -50,19 +52,19 @@ import de.mfthub.transfer.impl.ssh.ScpTransferClient;
 public class TransferExecutorImpl implements TransferExecutor {
    private static Logger LOG = LoggerFactory
          .getLogger(TransferExecutorImpl.class);
-   private static Map<Protocol, TransferClient<?>> transferClientMap = initTransferClientMap();
-   private static Map<ProcessingType, Processor> processorMap = initProcessorMap();
+   private static Map<Protocol, Class<? extends TransferClient<?>>> transferClientMap = initTransferClientMap();
+   private static Map<ProcessingType, Class<? extends Processor>> processorMap = initProcessorMap();
 
-   private static Map<Protocol, TransferClient<?>> initTransferClientMap() {
-      return ImmutableMap.<Protocol, TransferClient<?>> builder()
-            .put(Protocol.LOCAL, new LocalFilecopyTransferClient())
-            .put(Protocol.SCP, new ScpTransferClient())
+   private static Map<Protocol, Class<? extends TransferClient<?>>> initTransferClientMap() {
+      return ImmutableMap.<Protocol, Class<? extends TransferClient<?>>> builder()
+            .put(Protocol.LOCAL, LocalFilecopyTransferClient.class)
+            .put(Protocol.SCP, ScpTransferClient.class)
             .build();
    }
 
-   private static Map<ProcessingType, Processor> initProcessorMap() {
-      return ImmutableMap.<ProcessingType, Processor> builder()
-            .put(ProcessingType.COMPRESS, new CompressProcessor()).build();
+   private static Map<ProcessingType, Class<? extends Processor>> initProcessorMap() {
+      return ImmutableMap.<ProcessingType, Class<? extends Processor>> builder()
+            .put(ProcessingType.COMPRESS, CompressProcessor.class).build();
    }
 
    @Autowired
@@ -75,17 +77,35 @@ public class TransferExecutorImpl implements TransferExecutor {
 
    }
 
-   private static TransferClient<?> getTransferClient(
-         Protocol protocol) {
-      TransferClient<?> client = transferClientMap.get(protocol);
-      if (client == null) {
-         throw new IllegalStateException("No registered client for protocol: " + protocol);
+   private static TransferClient<?> getTransferClient(Protocol protocol,
+         EndpointConfiguration conf) {
+      Class<? extends TransferClient<?>> clientClass = transferClientMap
+            .get(protocol);
+      if (clientClass == null) {
+         throw new IllegalStateException("No registered client for protocol: "
+               + protocol);
       }
-      return client;
+      try {
+         return clientClass.getDeclaredConstructor(conf.getClass()).newInstance(conf);
+      } catch (InstantiationException | IllegalAccessException
+            | IllegalArgumentException | InvocationTargetException
+            | NoSuchMethodException | SecurityException e) {
+         throw new IllegalStateException(
+               "Couldn't create instance for protocol: " + protocol, e);
+      }
    }
    
    private static Processor getProcessor(ProcessingType type) {
-      return processorMap.get(type);
+      Class<? extends Processor> classProcessor = processorMap.get(type);
+      if (classProcessor == null) {
+         throw new IllegalStateException("No registered processor for type: "+ type);
+      }
+      
+      try {
+         return classProcessor.newInstance();
+      } catch (InstantiationException | IllegalAccessException e) {
+         throw new IllegalStateException("Couldn't create instance for type: "+ type, e);
+      }
    }
 
    @Override
@@ -138,11 +158,9 @@ public class TransferExecutorImpl implements TransferExecutor {
 
       Transfer transfer = delivery.getTransfer();
       Endpoint source = transfer.getSource();
-      TransferClient<?> transferClient = getTransferClient(source.getProtocol());
+      TransferClient<?> transferClient = getTransferClient(source.getProtocol(), source.getEndpointConfiguration());
 
       new TransferSanityCheck(transfer, transferClient).receiveSanityCheck();
-
-      transferClient.setConfiguration(source.getEndpointConfiguration());
 
       if (transfer.getTransferSendPolicies().contains(
             TransferSendPolicies.LOCKSTRATEGY_PG_LEGACY)) {
@@ -191,8 +209,7 @@ public class TransferExecutorImpl implements TransferExecutor {
 
       for (Endpoint target : transfer.getTargets()) {
          TransferClient<?> transferClient = getTransferClient(target
-               .getProtocol());
-         transferClient.setConfiguration(target.getEndpointConfiguration());
+               .getProtocol(), target.getEndpointConfiguration());
          TransferSendInfo info = transferClient.send(target, delivery,
                transfer.getTransferSendPolicies());
 

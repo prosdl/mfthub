@@ -16,8 +16,6 @@ public interface TransferClient<E extends EndpointConfiguration> {
    
    public Set<TransferClientFeature> getFeatures();
 
-   public void setConfiguration(EndpointConfiguration configuration);
-
    public E getConfiguration();
 
    public TransferReceiptInfo receive(Endpoint source, Delivery delivery, Set<TransferReceivePolicies> set)

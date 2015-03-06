@@ -22,6 +22,10 @@ public abstract class TransferClientSupport<E extends EndpointConfiguration>
        features = ImmutableSet.<TransferClientFeature>builder().add(feature).build();
    }
    
+   public TransferClientSupport(E configuration) {
+      this.configuration = configuration;
+   }
+   
    @Override
    public Set<TransferClientFeature> getFeatures() {
       return features;
@@ -29,12 +33,6 @@ public abstract class TransferClientSupport<E extends EndpointConfiguration>
    
    public boolean supportsFeature(TransferClientFeature transferClientFeature) {
       return features.contains(transferClientFeature);
-   }
-
-   @SuppressWarnings("unchecked")
-   @Override
-   public void setConfiguration(EndpointConfiguration configuration) {
-      this.configuration = (E) configuration;
    }
 
    @Override

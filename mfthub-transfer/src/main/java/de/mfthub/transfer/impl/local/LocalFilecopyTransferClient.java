@@ -26,7 +26,8 @@ public class LocalFilecopyTransferClient extends TransferClientSupport<EndpointC
 
    private static Logger LOG = LoggerFactory.getLogger(LocalFilecopyTransferClient.class);
    
-   public LocalFilecopyTransferClient() {
+   public LocalFilecopyTransferClient(EndpointConfLocalCp conf) {
+      super(conf);
       initalizeFeatures(
             TransferClientFeature.TF_SUPPORTS_RECEIVE_FILES,
             TransferClientFeature.TF_SUPPORTS_SEND_FILES,
