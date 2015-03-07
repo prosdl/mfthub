@@ -9,6 +9,7 @@ import org.quartz.JobDetail;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -38,12 +39,26 @@ public class MftSchedulerImpl implements MftScheduler {
             .withIdentity(transfer.getUuid(), QUARTZ_DEFAULT_GROUP)
             .usingJobData(jobDataMap)
             .build();
-      Trigger trigger = newTrigger()
+      
+      
+      TriggerBuilder<Trigger> triggerBuilder = newTrigger()
             .forJob(job)
-            .withIdentity("trigger[" + transfer.getUuid() + "]")
-            .withSchedule(cronSchedule(transfer.getTrigger().getCronExpresion()))
-            .build();
-      scheduler.scheduleJob(job, trigger);
+            .withIdentity("trigger[" + transfer.getUuid() + "]");
+      
+      if (transfer.getTrigger().getStartAt() != null) {
+         triggerBuilder = triggerBuilder.startAt(transfer.getTrigger().getStartAt());
+      }
+      
+      if (transfer.getTrigger().getEndAt() != null) {
+         triggerBuilder = triggerBuilder.endAt(transfer.getTrigger().getEndAt());
+      }
+      
+      if (transfer.getTrigger().getCronExpresion() != null) {
+         scheduler.scheduleJob(job, triggerBuilder.withSchedule(cronSchedule(transfer.getTrigger().getCronExpresion())).build());
+      } else {
+         scheduler.scheduleJob(job, triggerBuilder.build());
+      }
+            
    }
 
    @Override

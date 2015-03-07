@@ -7,6 +7,7 @@ import javax.jms.TextMessage;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessageCreator;
 import org.springframework.stereotype.Component;
@@ -24,6 +25,9 @@ public class MessageProducerDefaultImpl implements MessageProducer {
    @Autowired
    private DeliveryRepository deliveryRepository;
    
+   @Value("${mft.jms.redelivery.delay-in-secs}")
+   private int deliveryDelayInSecs;
+   
    @Override
    public void queueDeliveryForInboundMessage(final String deliveryUuid, final String transferUuid) {
       jmsTemplate.send(MftQueues.INBOUND, new MessageCreator() {
@@ -39,11 +43,29 @@ public class MessageProducerDefaultImpl implements MessageProducer {
    
    @Override
    @Transactional
-   public void requeue(String targetQueue, String deliveryUuid, String nextState) {
+   public void redeliverMessage(String targetQueue, String deliveryUuid, String nextState) {
 
       deliveryRepository.updateDeliveryState(deliveryUuid,
             DeliveryState.valueOf(nextState),
             "Requeue from redelivery-scheduler.", null);
       jmsTemplate.convertAndSend(targetQueue, deliveryUuid);
+   }
+   
+   
+   @Override
+   public void sendToRedeliveryQueue(final String deliveryUuid, final DeliveryState state, final String toQueue) {
+      jmsTemplate.send(MftQueues.REDELIVERY, new MessageCreator() {
+
+         @Override
+         public Message createMessage(Session session) throws JMSException {
+            TextMessage msg = session.createTextMessage(deliveryUuid);
+            msg.setLongProperty("when",
+                  System.currentTimeMillis() + 1000 * deliveryDelayInSecs);
+            msg.setStringProperty("next-state",
+                  state.name());
+            msg.setStringProperty("next-queue", toQueue);
+            return msg;
+         }
+      });      
    }
 }

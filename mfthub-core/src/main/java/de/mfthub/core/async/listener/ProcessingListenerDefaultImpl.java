@@ -10,8 +10,12 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Component;
 
 import de.mfthub.core.async.MftQueues;
+import de.mfthub.core.async.producer.MessageProducer;
 import de.mfthub.core.mediator.TransferExecutor;
+import de.mfthub.core.mediator.exception.NonRecoverableErrorException;
+import de.mfthub.core.mediator.exception.RecoverableErrorException;
 import de.mfthub.core.mediator.exception.TransferExcecutionException;
+import de.mfthub.model.entities.enums.DeliveryState;
 
 @Component
 @Transactional
@@ -22,10 +26,14 @@ public class ProcessingListenerDefaultImpl implements ProcessingListener {
    @Autowired
    private TransferExecutor transferExecutor;
    
+   @Autowired
+   private MessageProducer messageProducer;
+   
+   
    @Override
    @JmsListener(destination = MftQueues.PROCESSING, containerFactory = "defaultJmsListenerContainerFactory")
    @SendTo(MftQueues.OUTBOUND)
-   public String receive(String deliveryUuid) {
+   public String receive(final String deliveryUuid) throws Exception {
       LOG.info("{} received message: delivery.uuid='{}'", MftQueues.PROCESSING,
             deliveryUuid);
       
@@ -33,11 +41,16 @@ public class ProcessingListenerDefaultImpl implements ProcessingListener {
          transferExecutor.prepareProcessing(deliveryUuid);
          transferExecutor.process(deliveryUuid);
          transferExecutor.prepareSend(deliveryUuid);
+      } catch (NonRecoverableErrorException e) {
+         throw e;
+      } catch (RecoverableErrorException e) {
+         messageProducer.sendToRedeliveryQueue(deliveryUuid, DeliveryState.FILES_INBOUND, MftQueues.PROCESSING);
+         throw e;
       } catch (TransferExcecutionException e) {
-         // TODO Auto-generated catch block
-         throw new RuntimeException(e);
-      }
-      
+         throw e;
+      } catch (Exception e) {
+         throw e;
+      }      
       return deliveryUuid;
    }
 

@@ -12,6 +12,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.mfthub.transfer.api.TransferSendInfo;
+
 /**
  * Recursively copies files from local to remote via Jsch/scp.
  * 
@@ -33,6 +35,8 @@ public class ScpToFilesVisitor extends SimpleFileVisitor<Path> {
    private OutputStream out;
    private boolean rootDirVisited = false;
    private boolean dontCreateRootDir = true;
+   private int numberOfFilesSend = 0;
+   private long numberOfBytesSend = 0;
 
    public ScpToFilesVisitor(InputStream in, OutputStream out, boolean dontCreateRootDir) {
       this.in = in;
@@ -71,8 +75,9 @@ public class ScpToFilesVisitor extends SimpleFileVisitor<Path> {
          throws IOException {
       LOG.info("scp'ing file: {}", file.toString());
 
+      long fileLength = Files.size(file);
       ScpTools.writeCommand(out,
-            "C0644 " + Files.size(file) + " " + file.getFileName() + "\n");
+            "C0644 " + fileLength + " " + file.getFileName() + "\n");
       ScpTools.readAck(in);
 
       byte[] buffer = new byte[BUFFER_SIZE];
@@ -87,10 +92,21 @@ public class ScpToFilesVisitor extends SimpleFileVisitor<Path> {
       } catch (IOException e) {
          throw e;
       }
+      
+      numberOfBytesSend += fileLength;
+      numberOfFilesSend++;
 
       ScpTools.writeAck(out);
       ScpTools.readAck(in);
 
       return FileVisitResult.CONTINUE;
    }
+   public int getNumberOfFilesSend() {
+      return numberOfFilesSend;
+   }
+   public long getNumberOfBytesSend() {
+      return numberOfBytesSend;
+   }
+   
+   
 }

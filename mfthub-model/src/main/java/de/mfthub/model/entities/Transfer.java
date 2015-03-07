@@ -3,6 +3,7 @@ package de.mfthub.model.entities;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -89,6 +90,8 @@ public class Transfer {
       private FileSelector fileSelector;
 
       public Builder(String name) {
+         this.trigger = new Trigger();
+         this.trigger.setStartAt(new Date());
          this.name = name;
          this.tenant = Tenant.INTERNAL_TENANT;
          this.administrativeApplication = AdministrativeApplication.INTERNAL_ADMIN_APP;
@@ -137,11 +140,24 @@ public class Transfer {
       }
       
       public Builder withCronSchedule(String cron) {
-         this.trigger = new Trigger();
          this.trigger.setCronExpresion(cron);
          return this;
       }
       
+      public Builder withStartTime(Date date) {
+         this.trigger.setStartAt(date);
+         return this;
+      }
+      
+      public Builder startingInSeconds(int x) {
+         this.trigger.setStartAt(new Date(System.currentTimeMillis() + 1000*x));
+         return this;
+      }
+
+      public Builder withEndTime(Date date) {
+         this.trigger.setEndAt(date);
+         return this;
+      }
       public Builder files(String filename) {
          this.fileSelector = new FileSelector();
          this.fileSelector.setFilenameExpression(filename);

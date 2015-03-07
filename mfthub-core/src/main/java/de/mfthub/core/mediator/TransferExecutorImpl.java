@@ -134,6 +134,8 @@ public class TransferExecutorImpl implements TransferExecutor {
                "Exception while trying to create a delivery for transfer '%s'",
                transfer.getUuid()), e);
       }
+      
+      LOG.info("Created new delivery with uuid={}", delivery.getUuid());
 
       return delivery.getUuid();
    }
@@ -272,8 +274,8 @@ public class TransferExecutorImpl implements TransferExecutor {
             null);
 
       LOG.info(
-            "Finished prepare-processing phase for delivery: {}. Details:\n{}",
-            delivery.getUuid(), JSON.toJson(delivery));
+            "Finished prepare-processing phase for delivery: {}.",
+            delivery.getUuid());
 
    }
 

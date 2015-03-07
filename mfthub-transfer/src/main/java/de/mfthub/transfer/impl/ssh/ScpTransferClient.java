@@ -76,12 +76,17 @@ public class ScpTransferClient extends TransferClientSupport<EndpointConfScp> {
          channel.connect();
          ScpTools.readAck(in);
          
-         Files.walkFileTree(outbound.getPath(), new ScpToFilesVisitor(in, out));
+         ScpToFilesVisitor visitor = new ScpToFilesVisitor(in, out);
+         Files.walkFileTree(outbound.getPath(), visitor);
+         
+         info.setNumberOfFilesSend(visitor.getNumberOfFilesSend());
+         info.setTotalBytesSend(visitor.getNumberOfBytesSend());
+         info.setOutboundFolder(outbound.getPath().toString());
          
       } catch (JSchException e) {
-         throw new TransmissionException(ErrorCode.TRANSMISSION_COULDNT_SEND, "JSch-error while sending file with scp",e);
+         throw new TransmissionException(ErrorCode.TRANSMISSION_COULDNT_SEND, "SSH library error while sending file with scp: " + e.getMessage(),e);
       } catch (IOException e) {
-         throw new TransmissionException(ErrorCode.TRANSMISSION_COULDNT_SEND, "IO-error while sending file with scp",e);
+         throw new TransmissionException(ErrorCode.TRANSMISSION_COULDNT_SEND, "IO-error while sending file with scp: " + e.getMessage(),e);
       } finally {
          if (out != null) {
             try {

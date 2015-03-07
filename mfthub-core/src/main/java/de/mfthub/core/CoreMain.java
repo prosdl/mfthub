@@ -30,9 +30,11 @@ public class CoreMain {
          mftCoreAPI.bootstrapMft();
 
          Transfer transfer = new Transfer.Builder("testtransfer")
-               .withCronSchedule("0/20 * * * * ?")
+//               .withCronSchedule("0/20 * * * * ?")
+               .startingInSeconds(10)
                .fromNamedSource("MY_SENDER", "local:///tmp/sourcexxx")
-               .toTargets("local:///tmp/target1", "scp://scptest@localhost:22/home/scptest/receive?password=scptest")
+//               .toTargets("local:///tmp/target1", "scp://scptest@localhost:22/home/scptest/receive?password=scptest")
+               .toTargets("scp://scptest@localhost:22/home/scptest/receive?password=scptest")
                .files("bar/**/*.pdf")
                .addProcessor(ProcessingType.COMPRESS, "destination",
                      "foo.tar.gz")

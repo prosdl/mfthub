@@ -39,7 +39,7 @@ public class DeliveryRepositoryImpl implements DeliveryRepositoryCustom {
       persistedDelivery.getStateChanges().add(changeEvent);
       entityManager.persist(persistedDelivery);
       entityManager.flush();
-      LOG.info("Details\n{}",JSON.toJson(persistedDelivery));
+      LOG.trace("Details\n{}",JSON.toJson(persistedDelivery));
    }
 
    @Override
