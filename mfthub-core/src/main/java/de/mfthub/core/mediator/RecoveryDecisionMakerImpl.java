@@ -26,11 +26,11 @@ public class RecoveryDecisionMakerImpl implements RecoveryDecisionMaker {
          
          // TODO no endless loop: check delivery.stateChanges how often we retried ...
          
-         deliveryRepository.updateDeliveryState(delivery, DeliveryState.AUTO_RECOVERABLE_ERROR,
+         deliveryRepository.updateDeliveryState(delivery, DeliveryState.ERROR_TRYING_RECOVERY,
                transmissionException.getMessage(), null);         
          throw new RecoverableErrorException(transmissionException);
       } else {
-         deliveryRepository.updateDeliveryState(delivery, DeliveryState.NON_AUTO_RECOVERABLE_ERROR,
+         deliveryRepository.updateDeliveryState(delivery, DeliveryState.ERROR_NO_AUTO_RECOVERY,
                transmissionException.getMessage(), null);         
          throw new NonRecoverableErrorException(transmissionException);
       }

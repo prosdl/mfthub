@@ -46,18 +46,18 @@ public class InboundListenerDefaultImpl implements InboundListener {
       } catch (NonRecoverableErrorException e) {
          throw e;
       } catch (RecoverableErrorException e) {
-         LOG.error("REE", e);
          jmsTemplate.send(MftQueues.REDELIVERY, new MessageCreator() {
             
             @Override
             public Message createMessage(Session session) throws JMSException {
                TextMessage msg = session.createTextMessage(deliveryUuid);
-               msg.setLongProperty("when", System.currentTimeMillis() + 1000*5);
+               msg.setLongProperty("when", System.currentTimeMillis() + 1000*10);
                msg.setStringProperty("next-state", DeliveryState.INITIATED.name());
+               msg.setStringProperty("next-queue", MftQueues.INBOUND);
                return msg;
             }
          });
-         throw new RuntimeException(e);
+         throw e;
       } catch (TransferExcecutionException e) {
          throw e;
       } catch (Exception e) {

@@ -4,4 +4,6 @@ public interface MessageProducer {
 
    void queueDeliveryForInboundMessage(String deliveryUuid, String transferUuid);
 
+   void requeue(String targetQueue, String deliveryUuid, String nextState);
+
 }
