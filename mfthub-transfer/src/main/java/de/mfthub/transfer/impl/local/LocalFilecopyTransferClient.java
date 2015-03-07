@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import de.mfthub.model.entities.Delivery;
 import de.mfthub.model.entities.Endpoint;
 import de.mfthub.model.entities.EndpointConfLocalCp;
+import de.mfthub.model.entities.enums.ErrorCode;
 import de.mfthub.model.entities.enums.TransferClientFeature;
 import de.mfthub.model.entities.enums.TransferReceivePolicies;
 import de.mfthub.model.entities.enums.TransferSendPolicies;
@@ -48,7 +49,7 @@ public class LocalFilecopyTransferClient extends TransferClientSupport<EndpointC
          Files.walkFileTree(outbound.getPath(), visitor);
          LOG.info("Moved files: {}, total size in bytes: {}.", visitor.getFileCount(), visitor.getByteCount());
       } catch (IOException e) {
-         throw new TransmissionException(
+         throw new TransmissionException(ErrorCode.TRANSMISSION_COULDNT_SEND,
                String.format("Error while copying to directory %s", targetDirectory.toString()),e);
       }
 
@@ -65,6 +66,12 @@ public class LocalFilecopyTransferClient extends TransferClientSupport<EndpointC
       String from = getConfiguration().getDirectory();
       Path sourceDirectory = Paths.get(from);
       
+      if (!Files.isDirectory(sourceDirectory)) {
+         throw new TransmissionException(
+               ErrorCode.TRANSMISSION_COULDNT_RECEIVE, 
+               String.format("Folder '%s' is not an existing directory.", sourceDirectory.toAbsolutePath()));
+      }
+      
       MftFolder inbound = getInbound(delivery);
 
       MoveOrCopyFilesVisitor visitor = new MoveOrCopyFilesVisitor(delivery.getTransfer().getFileSelector().getFilenameExpression(),sourceDirectory, inbound.getPath());
@@ -72,7 +79,7 @@ public class LocalFilecopyTransferClient extends TransferClientSupport<EndpointC
          Files.walkFileTree(sourceDirectory, visitor);
          LOG.info("Moved files: {}, total size in bytes: {}.", visitor.getFileCount(), visitor.getByteCount());
       } catch (IOException e) {
-         throw new TransmissionException(
+         throw new TransmissionException(ErrorCode.TRANSMISSION_COULDNT_RECEIVE,
                String.format("Error while copying from directory %s", sourceDirectory),e);
       }
       

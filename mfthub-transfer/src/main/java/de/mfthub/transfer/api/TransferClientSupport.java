@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableSet;
 
 import de.mfthub.model.entities.Delivery;
 import de.mfthub.model.entities.EndpointConfiguration;
+import de.mfthub.model.entities.enums.ErrorCode;
 import de.mfthub.model.entities.enums.TransferClientFeature;
 import de.mfthub.storage.folder.MftFolder;
 import de.mfthub.storage.folder.MftPathException;
@@ -44,10 +45,10 @@ public abstract class TransferClientSupport<E extends EndpointConfiguration>
       try {
          return MftFolder.createOutboundFromDelivery(delivery);
       } catch (IOException e) {
-         throw new TransmissionException(
+         throw new TransmissionException(ErrorCode.INTERNAL_STORAGE, 
                String.format("Error while creating inbound box for delivery %s", delivery),e);
       } catch (MftPathException e) {
-         throw new TransmissionException(
+         throw new TransmissionException(ErrorCode.INTERNAL_STORAGE, 
                String.format("Error while constructing mft path for delivery %s", delivery),e);
       }      
    }
@@ -56,10 +57,10 @@ public abstract class TransferClientSupport<E extends EndpointConfiguration>
       try {
          return MftFolder.createInboundFromDelivery(delivery);
       } catch (IOException e) {
-         throw new TransmissionException(
+         throw new TransmissionException(ErrorCode.INTERNAL_STORAGE, 
                String.format("Error while creating inbound box for delivery %s", delivery),e);
       } catch (MftPathException e) {
-         throw new TransmissionException(
+         throw new TransmissionException(ErrorCode.INTERNAL_STORAGE, 
                String.format("Error while constructing mft path for delivery %s", delivery),e);
       }      
    }

@@ -7,22 +7,30 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jms.annotation.EnableJms;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.core.JmsTemplate;
+import org.springframework.util.ErrorHandler;
 
 import de.mfthub.core.async.MftQueues;
+import de.mfthub.core.async.listener.MftErrorHandler;
 
-@Configuration 
+@Configuration
 @EnableJms
 public class CoreMessagingConfiguration {
-   
+
+   @Bean
+   public ErrorHandler errorHandler() {
+      return new MftErrorHandler();
+   }
+
    @Bean
    public DefaultJmsListenerContainerFactory defaultJmsListenerContainerFactory() {
-      DefaultJmsListenerContainerFactory defaultJmsListenerContainerFactory = 
-            new DefaultJmsListenerContainerFactory();
-      defaultJmsListenerContainerFactory.setConnectionFactory(connectionFactory());
+      DefaultJmsListenerContainerFactory defaultJmsListenerContainerFactory = new DefaultJmsListenerContainerFactory();
+      defaultJmsListenerContainerFactory
+            .setConnectionFactory(connectionFactory());
       defaultJmsListenerContainerFactory.setConcurrency("3-10");
+      defaultJmsListenerContainerFactory.setErrorHandler(errorHandler());
       return defaultJmsListenerContainerFactory;
    }
-   
+
    @Bean
    public JmsTemplate jmsTemplate() {
       JmsTemplate jmsTemplate = new JmsTemplate();

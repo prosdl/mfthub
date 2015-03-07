@@ -21,7 +21,6 @@ import org.springframework.stereotype.Component;
 import com.google.common.collect.ImmutableMap;
 
 import de.mfthub.core.mediator.exception.TransferExcecutionException;
-import de.mfthub.core.mediator.exception.TransferMisconfigurationException;
 import de.mfthub.model.entities.Delivery;
 import de.mfthub.model.entities.Endpoint;
 import de.mfthub.model.entities.EndpointConfiguration;
@@ -72,6 +71,9 @@ public class TransferExecutorImpl implements TransferExecutor {
 
    @Autowired
    private DeliveryRepository deliveryRepository;
+   
+   @Autowired
+   private RecoveryDecisionMaker recoveryDecisionMaker;
 
    public TransferExecutorImpl() {
 
@@ -137,8 +139,7 @@ public class TransferExecutorImpl implements TransferExecutor {
    }
 
    @Override
-   public void receive(String deliveryUuid) throws TransmissionException,
-         TransferMisconfigurationException, TransferExcecutionException {
+   public void receive(String deliveryUuid) throws TransferExcecutionException {
       Delivery delivery = getDelivery(deliveryUuid);
       receive(delivery);
    }
@@ -151,8 +152,7 @@ public class TransferExecutorImpl implements TransferExecutor {
     * .Transfer)
     */
    @Override
-   public void receive(Delivery delivery) throws TransmissionException,
-         TransferMisconfigurationException {
+   public void receive(Delivery delivery) throws TransferExcecutionException {
       LOG.info("Starting receipt phase of delivery {}. Details:\n{}",
             delivery.getUuid(), JSON.toJson(delivery));
 
@@ -167,8 +167,13 @@ public class TransferExecutorImpl implements TransferExecutor {
          // TODO ...
       }
 
-      TransferReceiptInfo info = transferClient.receive(source, delivery,
-            transfer.getTransferReceivePolicies());
+      TransferReceiptInfo info = null;
+      try {
+         info = transferClient.receive(source, delivery,
+               transfer.getTransferReceivePolicies());
+      } catch (TransmissionException e) {
+         recoveryDecisionMaker.throwTEE(e, delivery);
+      }
 
       if (transfer.getTransferSendPolicies().contains(
             TransferSendPolicies.LOCKSTRATEGY_PG_LEGACY)) {
@@ -184,8 +189,7 @@ public class TransferExecutorImpl implements TransferExecutor {
    }
 
    @Override
-   public void send(String deliveryUuid) throws TransmissionException,
-         TransferExcecutionException {
+   public void send(String deliveryUuid) throws TransferExcecutionException {
       Delivery delivery = getDelivery(deliveryUuid);
       send(delivery);
    }
@@ -198,7 +202,7 @@ public class TransferExecutorImpl implements TransferExecutor {
     * .Delivery)
     */
    @Override
-   public void send(Delivery delivery) throws TransmissionException {
+   public void send(Delivery delivery) throws TransferExcecutionException {
       notNull(delivery);
       notNull(delivery.getTransfer());
       notEmpty(delivery.getTransfer().getTargets());
@@ -210,8 +214,14 @@ public class TransferExecutorImpl implements TransferExecutor {
       for (Endpoint target : transfer.getTargets()) {
          TransferClient<?> transferClient = getTransferClient(target
                .getProtocol(), target.getEndpointConfiguration());
-         TransferSendInfo info = transferClient.send(target, delivery,
-               transfer.getTransferSendPolicies());
+         
+         TransferSendInfo info = null;
+         try {
+            info = transferClient.send(target, delivery,
+                  transfer.getTransferSendPolicies());
+         } catch (TransmissionException e) {
+            recoveryDecisionMaker.throwTEE(e, delivery);
+         }
 
          deliveryRepository.updateDeliveryState(delivery,
                DeliveryState.FILES_SEND, String.format(

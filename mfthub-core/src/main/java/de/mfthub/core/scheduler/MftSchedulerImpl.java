@@ -10,6 +10,7 @@ import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import de.mfthub.model.entities.Transfer;
@@ -17,14 +18,15 @@ import de.mfthub.model.entities.Transfer;
 @Service
 public class MftSchedulerImpl implements MftScheduler {
    public static final String QUARTZ_DEFAULT_GROUP = "mftjobs";
+   public static final String QUARTZ_REDELIVERY_JOBID = "redelivery";
    
    @Autowired
    private Scheduler scheduler;
    
+   @Value("${mft.scheduler.redelivery.cron}")
+   private String redeliveryCron;
    
-   /* (non-Javadoc)
-    * @see de.mfthub.core.scheduler.MftScheduler#scheduleTransfer(de.mfthub.model.entities.Transfer)
-    */
+   
    @Override
    public void scheduleTransfer(Transfer transfer) throws SchedulerException {
       
@@ -43,6 +45,25 @@ public class MftSchedulerImpl implements MftScheduler {
             .build();
       scheduler.scheduleJob(job, trigger);
    }
+
+   @Override
+   public void scheduleRedeliveryJob() throws SchedulerException {
+      
+      JobDataMap jobDataMap = new JobDataMap();
+      
+      
+      JobDetail job = JobBuilder.newJob(RedeliveryJob.class)
+            .withIdentity(QUARTZ_REDELIVERY_JOBID, QUARTZ_DEFAULT_GROUP)
+            .usingJobData(jobDataMap)
+            .build();
+      Trigger trigger = newTrigger()
+            .forJob(job)
+            .withIdentity("trigger[" + QUARTZ_REDELIVERY_JOBID + "]")
+            .withSchedule(cronSchedule(redeliveryCron))
+            .build();
+      scheduler.scheduleJob(job, trigger);
+   }
+
    
    /* (non-Javadoc)
     * @see de.mfthub.core.scheduler.MftScheduler#startScheduler()

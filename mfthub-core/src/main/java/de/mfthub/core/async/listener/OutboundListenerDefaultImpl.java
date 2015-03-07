@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 
 import de.mfthub.core.async.MftQueues;
 import de.mfthub.core.mediator.TransferExecutor;
+import de.mfthub.core.mediator.exception.NonRecoverableErrorException;
+import de.mfthub.core.mediator.exception.RecoverableErrorException;
 import de.mfthub.core.mediator.exception.TransferExcecutionException;
 import de.mfthub.transfer.exception.TransmissionException;
 
@@ -25,19 +27,22 @@ public class OutboundListenerDefaultImpl implements OutboundListener {
 
    @Override
    @JmsListener(destination = MftQueues.OUTBOUND, containerFactory = "defaultJmsListenerContainerFactory")
-   public void send(String deliveryUuid) {
+   public void send(String deliveryUuid) throws Exception {
       LOG.info("{} received message: delivery.uuid='{}'", MftQueues.OUTBOUND,
             deliveryUuid);
 
       try {
          transferExecutor.send(deliveryUuid);
-      } catch (TransmissionException e) {
-         // TODO error queue
+      } catch (NonRecoverableErrorException e) {
+         throw e;
+      } catch (RecoverableErrorException e) {
+         LOG.error("REE", e);
          throw new RuntimeException(e);
       } catch (TransferExcecutionException e) {
-         // TODO error queue
-         throw new RuntimeException(e);
-      }
+         throw e;
+      } catch (Exception e) {
+         throw e;
+      }      
    }
 
 }

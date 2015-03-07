@@ -23,7 +23,7 @@ public class TransferSanityCheck {
       ArrayList<String> failureList = new ArrayList<>();
 
       for (TransferReceivePolicies p : transfer.getTransferReceivePolicies()) {
-         if (!p.isImpliedBy(transferClient.getFeatures())) {
+         if (!p.isSupportedByClient(transferClient.getFeatures())) {
             failureList.add(String.format(
                   "This transfer client ('%s') does not support "
                         + "the policy: %s.", transferClient.getClass()

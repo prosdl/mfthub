@@ -46,7 +46,12 @@ public class MftCoreAPIImpl implements MftCoreAPI {
    
    
    @Override
-   public void bootstrapMft() {
+   public void bootstrapMft() throws MftCoreAPIException {
       StorageConfiguration.INSTANCE.initialize(mftStorageRoot);
+      try {
+         mftScheduler.scheduleRedeliveryJob();
+      } catch (SchedulerException e) {
+         throw new MftCoreAPIException("Couldn't schedule redelivery job", e);
+      }
    }
 }

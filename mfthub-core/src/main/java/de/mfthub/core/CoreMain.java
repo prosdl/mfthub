@@ -16,6 +16,7 @@ import de.mfthub.model.conf.ModelJPAConfiguration;
 import de.mfthub.model.entities.Transfer;
 import de.mfthub.model.entities.enums.ProcessingType;
 import de.mfthub.model.entities.enums.TransferReceivePolicies;
+import de.mfthub.model.entities.enums.TransferSendPolicies;
 
 @SpringBootApplication()
 @Import({ CoreMessagingConfiguration.class, ModelJPAConfiguration.class,
@@ -29,14 +30,17 @@ public class CoreMain {
          mftCoreAPI.bootstrapMft();
 
          Transfer transfer = new Transfer.Builder("testtransfer")
-               .withCronSchedule("0/10 * * * * ?")
-               .fromNamedSource("MY_SENDER", "local:///tmp/source")
+               .withCronSchedule("0/20 * * * * ?")
+               .fromNamedSource("MY_SENDER", "local:///tmp/sourcexxx")
                .toTargets("local:///tmp/target1", "scp://scptest@localhost:22/home/scptest/receive?password=scptest")
                .files("bar/**/*.pdf")
                .addProcessor(ProcessingType.COMPRESS, "destination",
                      "foo.tar.gz")
                .usingReceivePolicies(
-                     TransferReceivePolicies.LOCKSTRATEGY_PG_LEGACY).build();
+                     TransferReceivePolicies.LOCKSTRATEGY_PG_LEGACY, 
+                     TransferReceivePolicies.RETRY_ALLOWED)
+               .usingSendPolicies(TransferSendPolicies.RETRY_ALLOWED)
+               .build();
          mftCoreAPI.saveAndScheduleTransfer(transfer);
       } catch (BeansException | URISyntaxException | MftCoreAPIException e) {
          e.printStackTrace();

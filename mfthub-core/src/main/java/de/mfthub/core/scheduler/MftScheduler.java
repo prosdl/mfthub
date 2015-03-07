@@ -15,4 +15,6 @@ public interface MftScheduler {
 
    public abstract void safeShutdownScheduler() throws SchedulerException;
 
+   void scheduleRedeliveryJob() throws SchedulerException;
+
 }

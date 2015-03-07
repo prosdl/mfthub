@@ -7,6 +7,6 @@ public interface MftCoreAPI {
    public abstract void saveAndScheduleTransfer(Transfer transferIn)
          throws MftCoreAPIException;
 
-   void bootstrapMft();
+   void bootstrapMft() throws MftCoreAPIException;
 
 }

@@ -17,6 +17,7 @@ import com.jcraft.jsch.Session;
 import de.mfthub.model.entities.Delivery;
 import de.mfthub.model.entities.Endpoint;
 import de.mfthub.model.entities.EndpointConfScp;
+import de.mfthub.model.entities.enums.ErrorCode;
 import de.mfthub.model.entities.enums.TransferClientFeature;
 import de.mfthub.model.entities.enums.TransferReceivePolicies;
 import de.mfthub.model.entities.enums.TransferSendPolicies;
@@ -78,9 +79,9 @@ public class ScpTransferClient extends TransferClientSupport<EndpointConfScp> {
          Files.walkFileTree(outbound.getPath(), new ScpToFilesVisitor(in, out));
          
       } catch (JSchException e) {
-         throw new TransmissionException("JSch-error while sending file with scp",e);
+         throw new TransmissionException(ErrorCode.TRANSMISSION_COULDNT_SEND, "JSch-error while sending file with scp",e);
       } catch (IOException e) {
-         throw new TransmissionException("IO-error while sending file with scp",e);
+         throw new TransmissionException(ErrorCode.TRANSMISSION_COULDNT_SEND, "IO-error while sending file with scp",e);
       } finally {
          if (out != null) {
             try {
