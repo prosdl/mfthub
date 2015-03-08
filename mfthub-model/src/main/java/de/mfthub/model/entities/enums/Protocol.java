@@ -19,9 +19,7 @@ public enum Protocol {
    SCP {
       @Override
       public EndpointConfiguration construct(URI uri) {
-         Map<String,String> params = getQueryMap(uri);
-         ObjectMapper om = new ObjectMapper();
-         EndpointConfScp conf = om.convertValue(params, EndpointConfScp.class);
+         EndpointConfScp conf = getEndpointFromQueryMap(uri, EndpointConfScp.class);
          conf.setDnsName(uri.getHost());
          conf.setPort(uri.getPort());
          conf.setUserid(uri.getUserInfo());
@@ -40,9 +38,19 @@ public enum Protocol {
 
    public abstract EndpointConfiguration construct(URI uri);
    
-   private static Map<String, String> getQueryMap(URI uri) {
+   private static <T> T getEndpointFromQueryMap(URI uri, Class<T> clazz) {
       String query = uri.getQuery();
-      return Splitter.on('&').trimResults().withKeyValueSeparator('=').split(query);
+      if (query == null) {
+         try {
+            return clazz.newInstance();
+         } catch (InstantiationException | IllegalAccessException e) {
+            throw new IllegalArgumentException(e);
+         }
+      }
+      Map<String,String> params = Splitter.on('&').trimResults().withKeyValueSeparator('=').split(query);
+      ObjectMapper om = new ObjectMapper();
+      T conf = om.convertValue(params, clazz);
+      return conf;
    }
 
    private Protocol() {

@@ -4,6 +4,7 @@ import javax.transaction.Transactional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
@@ -34,6 +35,7 @@ public class OutboundListenerDefaultImpl implements OutboundListener {
       LOG.info("{} received message: delivery.uuid='{}'", MftQueues.OUTBOUND,
             deliveryUuid);
 
+      MDC.put("delivery", MftQueues.OUTBOUND + ":" + deliveryUuid.substring(0, 5));
       try {
          transferExecutor.send(deliveryUuid);
       } catch (NonRecoverableErrorException e) {

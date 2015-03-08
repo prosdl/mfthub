@@ -29,21 +29,81 @@ import de.mfthub.transfer.exception.TransmissionException;
 
 public class ScpTransferClient extends TransferClientSupport<EndpointConfScp> {
    private static Logger LOG = LoggerFactory.getLogger(ScpTransferClient.class);
-   
+
    public ScpTransferClient(EndpointConfScp conf) {
       super(conf);
-      initalizeFeatures(
-            TransferClientFeature.TF_SUPPORTS_RECEIVE_FILES,
-            TransferClientFeature.TF_SUPPORTS_SEND_FILES
-            );
+      initalizeFeatures(TransferClientFeature.TF_SUPPORTS_RECEIVE_FILES,
+            TransferClientFeature.TF_SUPPORTS_SEND_FILES);
    }
-   
-   
+
    @Override
    public TransferReceiptInfo receive(Endpoint source, Delivery delivery,
          Set<TransferReceivePolicies> set) throws TransmissionException {
-      // TODO Auto-generated method stub
-      return null;
+      MftFolder inbound = getInbound(delivery);
+      TransferReceiptInfo info = new TransferReceiptInfo();
+
+      Session session = null;
+      ChannelExec channel = null;
+      OutputStream out = null;
+      InputStream in = null;
+
+      JSch jsch = new JSch();
+      try {
+         session = jsch.getSession(getConfiguration().getUserid(),
+               getConfiguration().getDnsName(), getConfiguration().getPort());
+         session.setUserInfo(new ScpSimplePasswordUserInfo(getConfiguration()
+               .getPassword()));
+         session.setConfig("StrictHostKeyChecking", "no");
+         session.connect();
+
+         // TODO filename, modes, no ant ...
+         String cmd = "scp -r -f "
+               + getConfiguration().getDirectory()
+               + "/"
+               + delivery.getTransfer().getFileSelector()
+                     .getFilenameExpression();
+         channel = (ChannelExec) session.openChannel("exec");
+         channel.setCommand(cmd);
+
+         out = channel.getOutputStream();
+         in = channel.getInputStream();
+
+         channel.connect();
+         ScpTools.writeAck(out);
+
+         ScpFromTransfer scpFrom = new ScpFromTransfer(in, out,
+               inbound.getPath());
+         scpFrom.transfer();
+
+         info.setNumberOfFilesReceived(scpFrom.getNumberOfFilesReceived());
+         info.setTotalBytesReceived(scpFrom.getNumberOfBytesReceived());
+         info.setInboundFolder(inbound.getPath().toString());
+      } catch (JSchException e) {
+         throw new TransmissionException(
+               ErrorCode.TRANSMISSION_COULDNT_RECEIVE,
+               "SSH library error while sending file with scp: "
+                     + e.getMessage(), e);
+      } catch (IOException e) {
+         throw new TransmissionException(
+               ErrorCode.TRANSMISSION_COULDNT_RECEIVE,
+               "IO-error while sending file with scp: " + e.getMessage(), e);
+      } finally {
+         if (out != null) {
+            try {
+               out.close();
+            } catch (IOException e) {
+               LOG.error("Error while closing out", e);
+            }
+         }
+         if (channel != null) {
+            channel.disconnect();
+         }
+         if (session != null) {
+            session.disconnect();
+         }
+      }
+
+      return info;
    }
 
    @Override
@@ -58,11 +118,13 @@ public class ScpTransferClient extends TransferClientSupport<EndpointConfScp> {
       ChannelExec channel = null;
       OutputStream out = null;
       InputStream in = null;
-      
+
       try {
          JSch jsch = new JSch();
-         session = jsch.getSession(getConfiguration().getUserid(), getConfiguration().getDnsName(), getConfiguration().getPort());
-         session.setUserInfo(new ScpSimplePasswordUserInfo(getConfiguration().getPassword()));
+         session = jsch.getSession(getConfiguration().getUserid(),
+               getConfiguration().getDnsName(), getConfiguration().getPort());
+         session.setUserInfo(new ScpSimplePasswordUserInfo(getConfiguration()
+               .getPassword()));
          session.setConfig("StrictHostKeyChecking", "no");
          session.connect();
 
@@ -75,24 +137,27 @@ public class ScpTransferClient extends TransferClientSupport<EndpointConfScp> {
 
          channel.connect();
          ScpTools.readAck(in);
-         
+
          ScpToFilesVisitor visitor = new ScpToFilesVisitor(in, out);
          Files.walkFileTree(outbound.getPath(), visitor);
-         
+
          info.setNumberOfFilesSend(visitor.getNumberOfFilesSend());
          info.setTotalBytesSend(visitor.getNumberOfBytesSend());
          info.setOutboundFolder(outbound.getPath().toString());
-         
+
       } catch (JSchException e) {
-         throw new TransmissionException(ErrorCode.TRANSMISSION_COULDNT_SEND, "SSH library error while sending file with scp: " + e.getMessage(),e);
+         throw new TransmissionException(ErrorCode.TRANSMISSION_COULDNT_SEND,
+               "SSH library error while sending file with scp: "
+                     + e.getMessage(), e);
       } catch (IOException e) {
-         throw new TransmissionException(ErrorCode.TRANSMISSION_COULDNT_SEND, "IO-error while sending file with scp: " + e.getMessage(),e);
+         throw new TransmissionException(ErrorCode.TRANSMISSION_COULDNT_SEND,
+               "IO-error while sending file with scp: " + e.getMessage(), e);
       } finally {
          if (out != null) {
             try {
                out.close();
             } catch (IOException e) {
-               LOG.error("Error while closing out",e);
+               LOG.error("Error while closing out", e);
             }
          }
          if (channel != null) {
@@ -102,7 +167,7 @@ public class ScpTransferClient extends TransferClientSupport<EndpointConfScp> {
             session.disconnect();
          }
       }
-      
+
       return info;
    }
 

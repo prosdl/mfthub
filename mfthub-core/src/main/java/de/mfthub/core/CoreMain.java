@@ -32,14 +32,15 @@ public class CoreMain {
          Transfer transfer = new Transfer.Builder("testtransfer")
 //               .withCronSchedule("0/20 * * * * ?")
                .startingInSeconds(10)
-               .fromNamedSource("MY_SENDER", "local:///tmp/sourcexxx")
-//               .toTargets("local:///tmp/target1", "scp://scptest@localhost:22/home/scptest/receive?password=scptest")
-               .toTargets("scp://scptest@localhost:22/home/scptest/receive?password=scptest")
-               .files("bar/**/*.pdf")
+//               .fromNamedSource("MY_SENDER", "local:///tmp/sourcexxx")
+               .fromNamedSource("MY_SCP_HOST", "scp://scptest@localhost:22/home/scptest/send?password=scptest")
+               .toTargets("local:///tmp/target1")
+//               .toTargets("scp://scptest@localhost:22/home/scptest/receive?password=scptest")
+               .files("*")
                .addProcessor(ProcessingType.COMPRESS, "destination",
                      "foo.tar.gz")
                .usingReceivePolicies(
-                     TransferReceivePolicies.LOCKSTRATEGY_PG_LEGACY, 
+//                     TransferReceivePolicies.LOCKSTRATEGY_PG_LEGACY, 
                      TransferReceivePolicies.RETRY_ALLOWED)
                .usingSendPolicies(TransferSendPolicies.RETRY_ALLOWED)
                .build();

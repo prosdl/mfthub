@@ -18,6 +18,8 @@ public class ScpFromTransfer {
    private InputStream in;
    private OutputStream out;
    private Path localDir;
+   private int numberOfFilesReceived = 0;
+   private long numberOfBytesReceived = 0;
 
    public ScpFromTransfer(InputStream in, OutputStream out, Path localDir) {
       this.in = in;
@@ -93,6 +95,8 @@ public class ScpFromTransfer {
       ScpTools.writeAck(out);
       fetch(localDir.resolve(filename), length);
       ScpTools.readAck(in);
+      numberOfFilesReceived++;
+      numberOfBytesReceived += length;
    }
 
    private void fetch(Path localfile, long numOfRemainingBytes) throws IOException {
@@ -112,4 +116,14 @@ public class ScpFromTransfer {
          localOut.flush();
       }
    }
+
+   public int getNumberOfFilesReceived() {
+      return numberOfFilesReceived;
+   }
+
+   public long getNumberOfBytesReceived() {
+      return numberOfBytesReceived;
+   }
+   
+   
 }
