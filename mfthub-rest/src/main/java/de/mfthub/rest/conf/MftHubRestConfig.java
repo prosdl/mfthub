@@ -1,4 +1,4 @@
-package de.mfthub.rest;
+package de.mfthub.rest.conf;
 
 import javax.ws.rs.ApplicationPath;
 

@@ -22,6 +22,7 @@ import de.mfthub.transfer.api.TransferClientSupport;
 import de.mfthub.transfer.api.TransferReceiptInfo;
 import de.mfthub.transfer.api.TransferSendInfo;
 import de.mfthub.transfer.exception.TransmissionException;
+import de.mfthub.transfer.util.Clock;
 
 public class LocalFilecopyTransferClient extends TransferClientSupport<EndpointConfLocalCp> {
 
@@ -44,6 +45,7 @@ public class LocalFilecopyTransferClient extends TransferClientSupport<EndpointC
       
       MftFolder outbound = getOutbound(delivery);
 
+      Clock clock = new Clock();
       MoveOrCopyFilesVisitor visitor = new MoveOrCopyFilesVisitor("**/*.*",outbound.getPath(),targetDirectory);
       try {
          Files.walkFileTree(outbound.getPath(), visitor);
@@ -54,8 +56,9 @@ public class LocalFilecopyTransferClient extends TransferClientSupport<EndpointC
       }
 
       TransferSendInfo info = new TransferSendInfo();
-      info.setNumberOfFilesSend(visitor.getFileCount());
-      info.setTotalBytesSend(visitor.getByteCount());
+      info.setTimeNeededInMilliSecs(clock.stopAndReturnPassedTime());
+      info.setNumberOfFiles(visitor.getFileCount());
+      info.setTotalBytes(visitor.getByteCount());
       info.setOutboundFolder(outbound.getPath().toString());
       return info;
    }
@@ -74,6 +77,7 @@ public class LocalFilecopyTransferClient extends TransferClientSupport<EndpointC
       
       MftFolder inbound = getInbound(delivery);
 
+      Clock clock = new Clock();
       MoveOrCopyFilesVisitor visitor = new MoveOrCopyFilesVisitor(delivery.getTransfer().getFileSelector().getFilenameExpression(),sourceDirectory, inbound.getPath());
       try {
          Files.walkFileTree(sourceDirectory, visitor);
@@ -84,8 +88,9 @@ public class LocalFilecopyTransferClient extends TransferClientSupport<EndpointC
       }
       
       TransferReceiptInfo info = new TransferReceiptInfo();
-      info.setNumberOfFilesReceived(visitor.getFileCount());
-      info.setTotalBytesReceived(visitor.getByteCount());
+      info.setTimeNeededInMilliSecs(clock.stopAndReturnPassedTime());
+      info.setNumberOfFiles(visitor.getFileCount());
+      info.setTotalBytes(visitor.getByteCount());
       info.setInboundFolder(inbound.getPath().toString());
       return info;
    }

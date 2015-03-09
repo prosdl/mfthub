@@ -3,6 +3,8 @@ package de.mfthub.core.api;
 import javax.transaction.Transactional;
 
 import org.quartz.SchedulerException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -15,6 +17,7 @@ import de.mfthub.storage.conf.StorageConfiguration;
 @Service
 @Transactional
 public class MftCoreAPIImpl implements MftCoreAPI {
+   private static Logger LOG = LoggerFactory.getLogger(MftCoreAPIImpl.class);
    
    @Autowired
    private MftScheduler mftScheduler;
@@ -47,8 +50,11 @@ public class MftCoreAPIImpl implements MftCoreAPI {
    
    @Override
    public void bootstrapMft() throws MftCoreAPIException {
+      LOG.info("Bootstrapping MFT ...");
+      LOG.info("Setting storage root to {}.", mftStorageRoot);
       StorageConfiguration.INSTANCE.initialize(mftStorageRoot);
       try {
+         LOG.info("Scheduling redelivery job.");
          mftScheduler.scheduleRedeliveryJob();
       } catch (SchedulerException e) {
          throw new MftCoreAPIException("Couldn't schedule redelivery job", e);

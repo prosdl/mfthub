@@ -183,9 +183,14 @@ public class TransferExecutorImpl implements TransferExecutor {
       }
 
       deliveryRepository.updateDeliveryState(delivery, DeliveryState.FILES_INBOUND,
-            String.format("Copied %d files (%d bytes) to folder: '%s'",
-                  info.getNumberOfFilesReceived(),
-                  info.getTotalBytesReceived(), info.getInboundFolder()), null);
+            String.format("Copied %d files to inbound folder", info.getNumberOfFiles()),
+            String.format("%s copied %d files (%,d bytes) in %.2f secs (%,.3f MBytes/sec) to folder: '%s'",
+                  source.getProtocol(),
+                  info.getNumberOfFiles(),
+                  info.getTotalBytes(),
+                  info.getTimeNeededInMilliSecs() / 1000.0,
+                  info.getTransferSpeedInMBperSec(),
+                  info.getInboundFolder()));
       LOG.info("Ending receipt phase of delivery {}. Details:\n{}",
             delivery.getUuid(), JSON.toJson(delivery));
    }
@@ -225,11 +230,17 @@ public class TransferExecutorImpl implements TransferExecutor {
             recoveryDecisionMaker.throwTEE(e, delivery);
          }
 
+
          deliveryRepository.updateDeliveryState(delivery,
-               DeliveryState.FILES_SEND, String.format(
-                     "Copied %d files (%d bytes) to target: '%s'",
-                     info.getNumberOfFilesSend(), info.getTotalBytesSend(),
-                     target.getEndpointKey()), null);
+               DeliveryState.FILES_SEND, 
+               String.format("Copied %d files from outbound folder", info.getNumberOfFiles()),
+                     String.format("%s copied %d files (%,d bytes) in %.2f secs (%,.3f MBytes/sec) from folder: '%s'",
+                           target.getProtocol(),
+                           info.getNumberOfFiles(),
+                           info.getTotalBytes(),
+                           info.getTimeNeededInMilliSecs() / 1000.0,
+                           info.getTransferSpeedInMBperSec(),
+                           info.getOutboundFolder()));
       }
 
       LOG.info("Ending send phase of delivery {}. Details:\n{}",
@@ -267,11 +278,13 @@ public class TransferExecutorImpl implements TransferExecutor {
       }
 
       deliveryRepository.updateDeliveryState(delivery,
-            DeliveryState.PROCESSING_READY, String.format(
-                  "Copied %d files (%d bytes) from '%s' to '%s'", visitor
+            DeliveryState.PROCESSING_READY, 
+            String.format("Copied %d files from inbound to processing-out.", visitor.getFileCount()),
+            String.format(
+                  "Copied %d files (%,d bytes) from '%s' to '%s'", visitor
                         .getFileCount(), visitor.getByteCount(), inbound
-                        .getPath().toString(), processingOut.getPath().toString()),
-            null);
+                        .getPath().toString(), processingOut.getPath().toString())
+            );
 
       LOG.info(
             "Finished prepare-processing phase for delivery: {}.",

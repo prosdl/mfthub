@@ -29,6 +29,8 @@ public class Endpoint {
    
    private String operatingSystem;
    
+   private boolean monitored = false;
+   
    @NotNull
    private boolean active;
 
@@ -109,6 +111,18 @@ public class Endpoint {
 
    public void setProtocol(Protocol protocol) {
       this.protocol = protocol;
+   }
+
+
+
+   public boolean isMonitored() {
+      return monitored;
+   }
+
+
+
+   public void setMonitored(boolean monitor) {
+      this.monitored = monitor;
    }
 
    

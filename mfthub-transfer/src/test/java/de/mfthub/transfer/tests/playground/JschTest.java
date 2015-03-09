@@ -1,4 +1,4 @@
-package de.mfthub.transfer.tests;
+package de.mfthub.transfer.tests.playground;
 
 import java.io.File;
 import java.io.FileInputStream;

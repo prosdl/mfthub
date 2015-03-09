@@ -13,8 +13,8 @@ import de.mfthub.model.conf.ModelJPAConfiguration;
       org.springframework.boot.autoconfigure.security.SecurityAutoConfiguration.class})
 @Import(ModelJPAConfiguration.class)
 @ImportResource("classpath:/spring-oauth2.xml")
-public class Main {
+public class WebMain {
    public static void main(String[] args) {
-      SpringApplication.run(Main.class, args);
+      SpringApplication.run(WebMain.class, args);
    }
 }

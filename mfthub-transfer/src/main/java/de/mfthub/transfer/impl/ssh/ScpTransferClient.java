@@ -26,6 +26,7 @@ import de.mfthub.transfer.api.TransferClientSupport;
 import de.mfthub.transfer.api.TransferReceiptInfo;
 import de.mfthub.transfer.api.TransferSendInfo;
 import de.mfthub.transfer.exception.TransmissionException;
+import de.mfthub.transfer.util.Clock;
 
 public class ScpTransferClient extends TransferClientSupport<EndpointConfScp> {
    private static Logger LOG = LoggerFactory.getLogger(ScpTransferClient.class);
@@ -73,11 +74,13 @@ public class ScpTransferClient extends TransferClientSupport<EndpointConfScp> {
 
          ScpFromTransfer scpFrom = new ScpFromTransfer(in, out,
                inbound.getPath());
+         Clock clock = new Clock();
          scpFrom.transfer();
 
-         info.setNumberOfFilesReceived(scpFrom.getNumberOfFilesReceived());
-         info.setTotalBytesReceived(scpFrom.getNumberOfBytesReceived());
+         info.setNumberOfFiles(scpFrom.getNumberOfFilesReceived());
+         info.setTotalBytes(scpFrom.getNumberOfBytesReceived());
          info.setInboundFolder(inbound.getPath().toString());
+         info.setTimeNeededInMilliSecs(clock.stopAndReturnPassedTime());
       } catch (JSchException e) {
          throw new TransmissionException(
                ErrorCode.TRANSMISSION_COULDNT_RECEIVE,
@@ -139,10 +142,12 @@ public class ScpTransferClient extends TransferClientSupport<EndpointConfScp> {
          ScpTools.readAck(in);
 
          ScpToFilesVisitor visitor = new ScpToFilesVisitor(in, out);
+         Clock clock = new Clock();
          Files.walkFileTree(outbound.getPath(), visitor);
 
-         info.setNumberOfFilesSend(visitor.getNumberOfFilesSend());
-         info.setTotalBytesSend(visitor.getNumberOfBytesSend());
+         info.setTimeNeededInMilliSecs(clock.stopAndReturnPassedTime());
+         info.setNumberOfFiles(visitor.getNumberOfFilesSend());
+         info.setTotalBytes(visitor.getNumberOfBytesSend());
          info.setOutboundFolder(outbound.getPath().toString());
 
       } catch (JSchException e) {
