@@ -37,8 +37,8 @@ public class CoreMain {
                .toTargets("local:///tmp/target1")
 //               .toTargets("scp://scptest@localhost:22/home/scptest/receive?password=scptest")
                .files("*")
-               .addProcessor(ProcessingType.COMPRESS, "destination",
-                     "foo.tar.gz")
+               .addProcessor(ProcessingType.COMPRESS, "archiveName",
+                     "my_files.tar.gz")
                .usingReceivePolicies(
 //                     TransferReceivePolicies.LOCKSTRATEGY_PG_LEGACY, 
                      TransferReceivePolicies.RETRY_ALLOWED)

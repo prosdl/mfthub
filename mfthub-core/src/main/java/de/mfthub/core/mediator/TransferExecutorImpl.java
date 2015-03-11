@@ -8,16 +8,20 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.transaction.Transactional;
 
+import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.io.FileUtils;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 
 import de.mfthub.core.mediator.exception.TransferExcecutionException;
@@ -25,6 +29,7 @@ import de.mfthub.model.entities.Delivery;
 import de.mfthub.model.entities.Endpoint;
 import de.mfthub.model.entities.EndpointConfiguration;
 import de.mfthub.model.entities.Processing;
+import de.mfthub.model.entities.ProcessingParamBinding;
 import de.mfthub.model.entities.Transfer;
 import de.mfthub.model.entities.enums.DeliveryState;
 import de.mfthub.model.entities.enums.ProcessingType;
@@ -376,11 +381,24 @@ public class TransferExecutorImpl implements TransferExecutor {
          }
          
          Processor processor = getProcessor(processing.getType());
+         
+         
+         // TODO auslagern, SpEL aware
+         for (ProcessingParamBinding bind: processing.getBindings()) {
+            try {
+               BeanUtils.copyProperty(processor, bind.getParam(), bind.getValue());
+            } catch (IllegalAccessException | InvocationTargetException e) {
+               throw new TransferExcecutionException(
+                     String.format("Problem while setting processor options for %s: %s.", processing.getType(), e.getMessage()), e);
+            }
+         }
+         
+         
          try {
             processor.processFiles(delivery);
          } catch (ProcessorException e) {
             throw new TransferExcecutionException(
-                  String.format("Problem during processing with %s.", processing.getType()), e);
+                  String.format("Problem during processing with %s: %s", processing.getType(), e.getMessage()), e);
          }
          LOG.info("Finished processing step: {} for delivery {}.", step, delivery.getUuid());
       }

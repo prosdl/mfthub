@@ -36,6 +36,11 @@ public class Tenant {
    public Tenant() {
       
    }
+   
+   @Override
+   public String toString() {
+      return name;
+   }
 
    public Long getId() {
       return id;

@@ -23,6 +23,10 @@ public class CompressProcessor implements Processor {
 //   @ProcessorParam(optional=false, description="Which files to compress.")
    private String filePattern;
    
+   private String tarMethod;
+   
+   private String archiveName;
+   
    public CompressProcessor() {
       filePattern = FILE_PATTERN_DEFAULT;
    }
@@ -45,7 +49,7 @@ public class CompressProcessor implements Processor {
       LOG.info("Compressing files ...");
       TarArchiver tarArchiver = new TarArchiver();
       tarArchiver.setCompression(TarCompressionMethod.gzip);
-      File destination = new File(processingOut.getPath().toFile(), "foo.tar.gz");
+      File destination = new File(processingOut.getPath().toFile(), archiveName);
       tarArchiver.setDestFile(destination);
       tarArchiver.addFileSet(new DefaultFileSet(processingIn.getPath().toFile()));
       try {
@@ -62,5 +66,21 @@ public class CompressProcessor implements Processor {
 
    public void setFilePattern(String filePattern) {
       this.filePattern = filePattern;
+   }
+
+   public String getTarMethod() {
+      return tarMethod;
+   }
+
+   public void setTarMethod(String tarMethod) {
+      this.tarMethod = tarMethod;
+   }
+
+   public String getArchiveName() {
+      return archiveName;
+   }
+
+   public void setArchiveName(String archiveName) {
+      this.archiveName = archiveName;
    }
 }
